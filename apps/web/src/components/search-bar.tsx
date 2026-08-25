@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Loader2, ChevronDown } from 'lucide-react'
 import type { SearchInputType } from '@osint/contracts'
+import { SEARCHABLE_INPUT_TYPES } from '@osint/contracts'
 import { detectInputType, buildSearchInput, INPUT_TYPE_LABELS } from '@/lib/detect-input'
 import { cn } from '@/lib/cn'
 
@@ -18,10 +19,7 @@ const PURPOSE_CODE_OPTIONS: { value: string; label: string }[] = [
   { value: 'other_documented', label: 'Other (documented)' },
 ]
 
-const ALL_TYPES: SearchInputType[] = [
-  'person_name', 'phone_e164', 'email', 'username', 'address',
-  'license_plate', 'vin', 'domain', 'ip_address', 'crypto_wallet', 'docket_number',
-]
+type SearchableType = Exclude<SearchInputType, 'image_face' | 'ssn_last4'>
 
 export interface SearchBarProps {
   /** When launched from a case (see CaseDetail's "New search" affordance), the search is attached to it and inherits its purpose code — a case already has a documented reason to exist, so re-asking per-search would be pure friction. */
@@ -33,7 +31,13 @@ export interface SearchBarProps {
 export function SearchBar({ caseId, defaultPurposeCode, autoFocus = true }: SearchBarProps = {}) {
   const router = useRouter()
   const [raw, setRaw] = useState('')
-  const [typeOverride, setTypeOverride] = useState<SearchInputType | null>(null)
+  // `null` means "auto-detect" — surfaced in the type menu as its own
+  // always-present first option (value null) rather than something the UI
+  // can only reach by happening to type text that re-detects as the same
+  // type as the current override. Previously nothing ever set this back to
+  // null once a user picked an explicit type, so a manual override silently
+  // pinned every subsequent search to that type regardless of what was typed.
+  const [typeOverride, setTypeOverride] = useState<SearchableType | null>(null)
   const [purposeCode, setPurposeCode] = useState(defaultPurposeCode ?? PURPOSE_CODE_OPTIONS[0]!.value)
   const [typeMenuOpen, setTypeMenuOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -89,14 +93,25 @@ export function SearchBar({ caseId, defaultPurposeCode, autoFocus = true }: Sear
           </button>
           {typeMenuOpen && (
             <div className="absolute right-0 top-full z-10 mt-1 w-56 rounded-md border border-[var(--border-default)] bg-[var(--bg-surface-raised)] p-1 shadow-xl">
-              {ALL_TYPES.map((t) => (
+              <button
+                type="button"
+                onClick={() => { setTypeOverride(null); setTypeMenuOpen(false) }}
+                className={cn(
+                  'flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-xs transition hover:bg-[var(--bg-hover)]',
+                  typeOverride === null ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]',
+                )}
+              >
+                {`Auto-detect (${INPUT_TYPE_LABELS[detectedType]})`}
+              </button>
+              <div className="my-1 border-t border-[var(--border-subtle)]" />
+              {SEARCHABLE_INPUT_TYPES.map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => { setTypeOverride(t); setTypeMenuOpen(false) }}
                   className={cn(
                     'flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-xs transition hover:bg-[var(--bg-hover)]',
-                    t === activeType ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]',
+                    typeOverride === t ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]',
                   )}
                 >
                   {INPUT_TYPE_LABELS[t]}

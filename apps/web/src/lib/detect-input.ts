@@ -7,11 +7,18 @@ import type { SearchInput, SearchInputType } from '@osint/contracts'
  * editable chip in the UI (see SearchBar) precisely because this is a
  * heuristic, not a guarantee — the operator can always override it.
  */
-export function detectInputType(raw: string): SearchInputType {
+/** Never returns 'image_face' (no text pattern can mean "this is a photo") or 'ssn_last4' (never a search key — see PersonNameInput's doc comment in contracts). */
+export function detectInputType(raw: string): Exclude<SearchInputType, 'image_face' | 'ssn_last4'> {
   const trimmed = raw.trim()
 
   if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return 'email'
-  if (/^https?:\/\//.test(trimmed) || /^[a-z0-9-]+\.[a-z]{2,}$/i.test(trimmed) && !trimmed.includes(' ')) {
+  // Grouped as (A || B) && C, not A || (B && C). Written without the outer
+  // parens, `&&` binds tighter than `||`, so the space check only ever
+  // gated the bare-domain branch (B) — a pasted "https://example.com with
+  // trailing text" satisfied the `https?://` branch (A) unconditionally and
+  // still returned 'domain' regardless of the space. Grouping explicitly
+  // makes the space check apply to the whole url-or-domain test.
+  if ((/^https?:\/\//.test(trimmed) || /^[a-z0-9-]+\.[a-z]{2,}$/i.test(trimmed)) && !trimmed.includes(' ')) {
     if (!/^\d+\.\d+\.\d+\.\d+$/.test(trimmed)) return 'domain'
   }
   if (/^(\d{1,3}\.){3}\d{1,3}$/.test(trimmed) || /^[0-9a-f:]+:[0-9a-f:]+$/i.test(trimmed)) return 'ip_address'
@@ -31,18 +38,33 @@ export function detectInputType(raw: string): SearchInputType {
   return 'person_name'
 }
 
-export function buildSearchInput(type: SearchInputType, raw: string, opts?: { stateHint?: string }): SearchInput {
+/**
+ * `type` is deliberately typed as the 11 searchable types, not the full
+ * SearchInputType union — `image_face` needs an uploaded file's sha256,
+ * not raw text (see buildImageFaceInput), and `ssn_last4` is never a
+ * search key on its own (see contracts' PersonNameInput doc comment), so
+ * neither can be constructed from a plain string and both are excluded at
+ * the type level instead of via a runtime throw a caller could hit.
+ */
+export function buildSearchInput(
+  type: Exclude<SearchInputType, 'image_face' | 'ssn_last4'>,
+  raw: string,
+  opts?: { stateHint?: string; countyHint?: string },
+): SearchInput {
   const trimmed = raw.trim()
   switch (type) {
     case 'person_name':
       return { type: 'person_name', fullName: trimmed, stateHint: opts?.stateHint }
     case 'address':
-      return { type: 'address', raw: trimmed }
-    case 'image_face':
-      throw new Error('image_face input must be constructed from an uploaded file, not raw text')
+      return { type: 'address', raw: trimmed, stateHint: opts?.stateHint, countyHint: opts?.countyHint }
     default:
       return { type, value: trimmed, stateHint: opts?.stateHint }
   }
+}
+
+/** Constructs the one SearchInput that can't come from raw text — a face-match search keyed by the sha256 of an already-archived upload. */
+export function buildImageFaceInput(imageSha256: string): SearchInput {
+  return { type: 'image_face', imageSha256 }
 }
 
 export const INPUT_TYPE_LABELS: Record<SearchInputType, string> = {
