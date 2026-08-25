@@ -170,55 +170,75 @@ things dominate and are each addressed below: GIN index maintenance,
 Postgres's stock (tiny) default memory settings, and per-row/per-batch
 INSERT overhead.
 
-### 1. Drop the search indexes before loading, rebuild after
+### 1. Run the tuning script (drops indexes + tunes Postgres, one shot)
 
-`csv_record_search_vector_idx` and `csv_record_search_text_trgm_idx`
-(`packages/db/migrations/0005_csv_search_indexes.sql`) are both GIN
-indexes, and GIN maintenance on every single insert — the trigram one
-especially — is usually the single biggest cost at this scale. Building
-fresh on an already-loaded table is far cheaper than maintaining it
-incrementally across hundreds of millions of writes.
+`infra/scripts/tune-for-bulk-load.ps1` does everything in this section in
+one go: drops `csv_record_search_vector_idx` and
+`csv_record_search_text_trgm_idx` (both GIN — incremental maintenance on
+every insert, the trigram one especially, is usually the single biggest
+cost at this scale, so build fresh after loading instead), disables
+autovacuum on `csv_record`, relaxes durability/checkpoint settings, bumps
+`shared_buffers`/`effective_cache_size`/`maintenance_work_mem`/`work_mem`,
+and **restarts the postgres container** (required for `shared_buffers` to
+take effect — run this before anything is writing to `csv_record`, not
+mid-load):
 
-```bash
-docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "DROP INDEX IF EXISTS csv_record_search_vector_idx; DROP INDEX IF EXISTS csv_record_search_text_trgm_idx;"
+```powershell
+./infra/scripts/tune-for-bulk-load.ps1
 ```
 
-After the load finishes, rebuild them (non-concurrently is fine — and
-faster — if nothing else needs to query the table meanwhile; use `CREATE
-INDEX CONCURRENTLY` instead if it does):
+Then add the CSV source folder(s) — that's what actually starts indexing.
+
+Once the load is fully done, revert the durability/vacuum settings and
+rebuild the two indexes:
+
+```powershell
+./infra/scripts/tune-for-bulk-load.ps1 -Revert
+```
 
 ```bash
 docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "CREATE INDEX csv_record_search_vector_idx ON csv_record USING gin (search_vector); CREATE INDEX csv_record_search_text_trgm_idx ON csv_record USING gin (search_text gin_trgm_ops); ANALYZE csv_record;"
 ```
+(non-concurrently is fine — and faster — if nothing else needs to query
+the table meanwhile; use `CREATE INDEX CONCURRENTLY` instead if it does)
 
-### 2. Postgres tuning for the duration of the load
+The script defaults `shared_buffers=16GB`/`effective_cache_size=48GB` —
+sized off a 64GB host, not a universal default. Pass different values by
+editing the script's `Invoke-Psql` calls, or run the statements by hand
+(below) if you're not on Windows/PowerShell. Also check Docker Desktop's
+own VM memory cap (Settings → Resources) isn't set lower than what you're
+asking Postgres for — the container will fail to (re)start otherwise.
 
-The stock image ships with tiny defaults (`shared_buffers=128MB`,
-`maintenance_work_mem=64MB`) that will bottleneck a large load regardless
-of anything else. Reloadable settings (no restart):
+<details>
+<summary>What the script runs, if you need to do it by hand</summary>
+
+**`ALTER SYSTEM` cannot run in a transaction block** — and psql wraps
+multiple `;`-separated statements passed to a single `-c` string in an
+implicit transaction, so chaining `ALTER SYSTEM` in with other statements
+that way fails with `ALTER SYSTEM cannot run inside a transaction block`.
+Pass each statement as its own `-c` flag instead:
 
 ```bash
-docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "ALTER TABLE csv_record SET (autovacuum_enabled = false); ALTER SYSTEM SET synchronous_commit = off; ALTER SYSTEM SET maintenance_work_mem = '4GB'; ALTER SYSTEM SET work_mem = '256MB'; ALTER SYSTEM SET max_wal_size = '16GB'; ALTER SYSTEM SET checkpoint_timeout = '30min'; SELECT pg_reload_conf();"
+docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "DROP INDEX IF EXISTS csv_record_search_vector_idx;" -c "DROP INDEX IF EXISTS csv_record_search_text_trgm_idx;" -c "ALTER TABLE csv_record SET (autovacuum_enabled = false);" -c "ALTER SYSTEM SET synchronous_commit = off;" -c "ALTER SYSTEM SET maintenance_work_mem = '4GB';" -c "ALTER SYSTEM SET work_mem = '256MB';" -c "ALTER SYSTEM SET max_wal_size = '16GB';" -c "ALTER SYSTEM SET checkpoint_timeout = '30min';" -c "ALTER SYSTEM SET shared_buffers = '16GB';" -c "ALTER SYSTEM SET effective_cache_size = '48GB';"
 ```
 
-`shared_buffers`/`effective_cache_size` need a restart (worth doing once,
-up front, rather than mid-load) — size these off the *host's* available
-RAM, not a fixed number, and check Docker Desktop's own VM memory cap
-(Settings → Resources) isn't set lower than what you're about to ask
-Postgres for:
+`docker compose` resolves `-f infra/docker-compose.yml` relative to your
+current directory, so `cd` into the repo root first:
 
 ```bash
-docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "ALTER SYSTEM SET shared_buffers = '16GB'; ALTER SYSTEM SET effective_cache_size = '48GB';"
+cd /path/to/Osint-Dashboard
 docker compose -f infra/docker-compose.yml restart postgres
 ```
 
-Once the load is done, revert the durability/vacuum settings (`shared_buffers`/`effective_cache_size` are fine to leave):
+Revert:
 
 ```bash
-docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "ALTER TABLE csv_record SET (autovacuum_enabled = true); ALTER SYSTEM SET synchronous_commit = on; SELECT pg_reload_conf();"
+docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "ALTER TABLE csv_record SET (autovacuum_enabled = true);" -c "ALTER SYSTEM SET synchronous_commit = on;" -c "SELECT pg_reload_conf();"
 ```
 
-### 3. The worker's own load path: batched INSERT vs. COPY
+</details>
+
+### 2. The worker's own load path: batched INSERT vs. COPY
 
 `apps/worker/src/csv/index-file.ts` streams each file through `csv-parse`
 and writes to `csv_record` via Postgres `COPY FROM STDIN`
