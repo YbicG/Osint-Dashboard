@@ -6,7 +6,10 @@ import { csvSourceFolder, csvSourceFile } from '@osint/db/schema'
 import { appendAuditEntry } from '@osint/core'
 import { getCsvIndexQueue } from '../queue/queues'
 
-const CSV_EXTENSION = /\.csv$/i
+// .csv is the expected case; .txt and .tsv are also accepted since the
+// actual parser (index-file.ts) sniffs the delimiter from content rather
+// than trusting the extension — some CSV exports just get named .txt.
+const CSV_EXTENSION = /\.(csv|txt|tsv)$/i
 
 /**
  * Discovers CSV files under one configured folder, diffs them against what
