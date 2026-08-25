@@ -30,3 +30,25 @@ export function createSubscriberConnection(): IORedis {
 export function searchEventChannel(searchId: string): string {
   return `search:${searchId}:events`
 }
+
+// --- CSV Search indexing pipeline — mirrors apps/worker/src/queue/queues.ts ---
+
+export const CSV_SCAN_QUEUE = 'csv-scan'
+export interface CsvScanJobData {
+  folderId: string
+}
+
+export const CSV_INDEX_QUEUE = 'csv-index'
+export interface CsvIndexJobData {
+  fileId: string
+}
+
+let csvScanQueue: Queue<CsvScanJobData> | null = null
+export function getCsvScanQueue(): Queue<CsvScanJobData> {
+  if (!csvScanQueue) {
+    csvScanQueue = new Queue<CsvScanJobData>(CSV_SCAN_QUEUE, {
+      connection: new IORedis(REDIS_URL, { maxRetriesPerRequest: null }),
+    })
+  }
+  return csvScanQueue
+}

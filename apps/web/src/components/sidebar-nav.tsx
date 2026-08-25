@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Search, Briefcase, ShieldCheck, LogOut, Radar, GitMerge, Activity, History } from 'lucide-react'
+import { Search, Briefcase, ShieldCheck, LogOut, Radar, GitMerge, Activity, History, FileSearch, FolderCog } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
 const NAV_ITEMS = [
@@ -10,10 +10,12 @@ const NAV_ITEMS = [
   { href: '/history', label: 'History', icon: History },
   { href: '/cases', label: 'Cases', icon: Briefcase },
   { href: '/resolution', label: 'Review Queue', icon: GitMerge },
+  { href: '/csv-search', label: 'CSV Search', icon: FileSearch },
 ]
 
 const ADMIN_NAV_ITEMS = [
   { href: '/admin/sources', label: 'Source Health', icon: Activity },
+  { href: '/admin/csv-sources', label: 'CSV Sources', icon: FolderCog },
 ]
 
 export function SidebarNav({ user }: { user: { displayName: string; role: string; email: string } }) {

@@ -135,6 +135,9 @@ importers:
       bullmq:
         specifier: ^5.34.3
         version: 5.81.3
+      csv-parse:
+        specifier: ^7.0.2
+        version: 7.0.2
       dotenv:
         specifier: ^16.4.7
         version: 16.6.1
@@ -1847,6 +1850,9 @@ packages:
 
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
+
+  csv-parse@7.0.2:
+    resolution: {integrity: sha512-uKZghv9UmPkMVLYy//KZ9HFAIJsl7wkhoEdIL0+rhuSY9pZQlhaeGEDPIe+/w7eh81MOql8Q/9+inAGWG6ZHYA==}
 
   cytoscape@3.34.1:
     resolution: {integrity: sha512-Lr0RvH9H75y9ar8h9Toy6u4lxRSCcxUq+hHcQ26sVWo6BnaQp1gwEZOYqwuYTZhyW7npyKnNLP8oJ2p1/3OZ7g==}
@@ -4620,6 +4626,8 @@ snapshots:
       which: 2.0.2
 
   csstype@3.2.3: {}
+
+  csv-parse@7.0.2: {}
 
   cytoscape@3.34.1: {}
 

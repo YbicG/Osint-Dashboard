@@ -22,6 +22,34 @@
       "when": 1787618473700,
       "tag": "0002_simple_swarm",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1787674464088,
+      "tag": "0003_curvy_shinobi_shaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1787675305946,
+      "tag": "0004_steady_ricochet",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1787675335334,
+      "tag": "0005_csv_search_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787675652830,
+      "tag": "0006_concerned_diamondback",
+      "breakpoints": true
     }
   ]
 }
