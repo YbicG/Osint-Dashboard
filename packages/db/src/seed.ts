@@ -1,3 +1,4 @@
+import './load-env.js' // must stay the first import — see load-env.ts's doc comment
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import { randomBytes, scrypt as scryptCb } from 'node:crypto'

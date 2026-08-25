@@ -1,3 +1,4 @@
+import './load-env.js' // must stay the first import — see load-env.ts's doc comment
 import { Worker } from 'bullmq'
 import { db } from '@osint/db'
 import { createRedisConnection } from './queue/connection'

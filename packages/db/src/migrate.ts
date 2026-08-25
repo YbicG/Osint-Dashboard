@@ -1,3 +1,4 @@
+import './load-env.js' // must stay the first import — see load-env.ts's doc comment
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
