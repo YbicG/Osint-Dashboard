@@ -1,0 +1,14 @@
+{
+  "cpes": [],
+  "hostnames": [
+    "team.tesisquare.com",
+    "dns.google"
+  ],
+  "ip": "8.8.8.8",
+  "ports": [
+    53,
+    443
+  ],
+  "tags": [],
+  "vulns": []
+}

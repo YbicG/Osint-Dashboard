@@ -1,0 +1,19 @@
+{
+  "sha": "66498c75b4f8017f62d720d9b59675bdf3abce91",
+  "commit": {
+    "author": {
+      "name": "Linus Torvalds",
+      "email": "torvalds@linux-foundation.org",
+      "date": "2026-08-24T19:21:15Z"
+    },
+    "committer": {
+      "name": "Linus Torvalds",
+      "email": "torvalds@linux-foundation.org",
+      "date": "2026-08-24T19:21:15Z"
+    },
+    "message": "Merge tag 'dmaengine-7.3-rc1' of git://git.kernel.org/pub/scm/linux/kernel/git/vkoul/dmaengine"
+  },
+  "author": {
+    "login": "torvalds"
+  }
+}

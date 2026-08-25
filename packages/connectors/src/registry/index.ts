@@ -38,6 +38,18 @@ import { censusGeocoderConnector } from '../sources/federal/census-geocoder'
 import { nycOpenViolationsConnector } from '../sources/courts/nyc-open-violations'
 import { licensedPlateLookupConnector } from '../sources/courts/licensed-plate-lookup'
 import { mempoolSpaceConnector } from '../sources/digital/mempool-space'
+import { ofacCryptoConnector } from '../sources/sanctions/ofac-crypto'
+import { nanpaGeographyConnector } from '../sources/digital/nanpa-geography'
+import { keybaseConnector } from '../sources/digital/keybase'
+import { hackernewsConnector } from '../sources/digital/hackernews'
+import { gitlabUserConnector } from '../sources/digital/gitlab-user'
+import { dnsEmailDeliverabilityConnector } from '../sources/digital/dns-email-deliverability'
+import { dnsRecordsConnector } from '../sources/digital/dns-records'
+import { githubEmailConnector } from '../sources/digital/github-email'
+import { blockscoutEvmConnector } from '../sources/digital/blockscout-evm'
+import { internetdbShodanConnector } from '../sources/digital/internetdb-shodan'
+import { bopInmateConnector } from '../sources/federal/bop-inmate'
+import { finraBrokercheckConnector } from '../sources/federal/finra-brokercheck'
 
 /**
  * The full connector catalog. This is the single place a new connector gets
@@ -73,6 +85,18 @@ export const CONNECTOR_REGISTRY: ConnectorDefinition[] = [
   nycOpenViolationsConnector,
   licensedPlateLookupConnector,
   mempoolSpaceConnector,
+  ofacCryptoConnector,
+  nanpaGeographyConnector,
+  keybaseConnector,
+  hackernewsConnector,
+  gitlabUserConnector,
+  dnsEmailDeliverabilityConnector,
+  dnsRecordsConnector,
+  githubEmailConnector,
+  blockscoutEvmConnector,
+  internetdbShodanConnector,
+  bopInmateConnector,
+  finraBrokercheckConnector,
 ]
 
 export function getConnector(id: string): ConnectorDefinition | undefined {

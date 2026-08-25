@@ -1,0 +1,22 @@
+{
+  "Status": 0,
+  "TC": false,
+  "RD": true,
+  "RA": true,
+  "AD": false,
+  "CD": false,
+  "Question": [
+    {
+      "name": "_dmarc.gmail.com",
+      "type": 16
+    }
+  ],
+  "Answer": [
+    {
+      "name": "_dmarc.gmail.com",
+      "type": 16,
+      "TTL": 528,
+      "data": "\"v=DMARC1; p=none; sp=quarantine; rua=mailto:mailauth-reports@google.com\""
+    }
+  ]
+}

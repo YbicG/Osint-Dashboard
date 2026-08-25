@@ -19,7 +19,7 @@ export const certificateTransparencyConnector = defineConnector({
   transport: 'http',
   jurisdictionScope: 'national',
   accepts: ['domain'],
-  emits: ['domain_certificate'],
+  emits: ['domain_certificate', 'subdomain'],
   rateLimitPerMinute: 20, // crt.sh is a shared community resource — deliberately conservative
   robotsPolicy: 'honor',
   tosNote: 'Public CT log aggregator run by Sectigo; no auth, be a good citizen with request volume.',
@@ -42,6 +42,7 @@ export const certificateTransparencyConnector = defineConnector({
     if (!text.trim()) return
     const entries = JSON.parse(text) as CrtShEntry[]
 
+    const rootDomain = ctx.input.value.toLowerCase()
     const seenSubdomains = new Set<string>()
     for (const entry of entries) {
       for (const name of entry.name_value.split('\n')) {
@@ -57,6 +58,19 @@ export const certificateTransparencyConnector = defineConnector({
           observedAt: entry.not_before ? new Date(entry.not_before) : null,
           evidenceUrl: `https://crt.sh/?id=${entry.id}`,
         })
+
+        // Also emit a dedicated `subdomain` claim (skipping the root domain
+        // itself and wildcard entries) — this is what feeds the pivot
+        // engine's domain -> subdomain -> ip_address chain; the
+        // domain_certificate claim above is the raw evidentiary record, this
+        // is the derived-identifier signal.
+        if (clean !== rootDomain && !clean.startsWith('*.')) {
+          yield claim('subdomain', clean, {
+            confidence: 0.9,
+            observedAt: entry.not_before ? new Date(entry.not_before) : null,
+            evidenceUrl: `https://crt.sh/?id=${entry.id}`,
+          })
+        }
       }
     }
   },

@@ -1,0 +1,201 @@
+{
+  "hits": {
+    "total": 198,
+    "hits": [
+      {
+        "_type": "_doc",
+        "_source": {
+          "ind_source_id": "6808119",
+          "ind_firstname": "John",
+          "ind_middlename": "Morgan",
+          "ind_lastname": "Smith",
+          "ind_other_names": [
+            "John M Smith",
+            "John  Smith"
+          ],
+          "ind_bc_scope": "Active",
+          "ind_ia_scope": "NotInScope",
+          "ind_bc_disclosure_fl": "N",
+          "ind_approved_finra_registration_count": 1,
+          "ind_employments_count": 2,
+          "ind_industry_cal_date": "2018-07-12",
+          "ind_current_employments": [
+            {
+              "firm_id": "7452",
+              "firm_name": "VANGUARD MARKETING CORPORATION",
+              "branch_city": "CHARLOTTE",
+              "branch_state": "NC",
+              "branch_zip": "28262",
+              "ia_only": "N",
+              "firm_bd_sec_number": "21570",
+              "firm_bd_full_sec_number": "8-21570"
+            },
+            {
+              "firm_id": "7452",
+              "firm_name": "VANGUARD MARKETING CORPORATION",
+              "branch_city": "CHARLOTTE",
+              "branch_state": "NC",
+              "ia_only": "N",
+              "firm_bd_sec_number": "21570",
+              "firm_bd_full_sec_number": "8-21570"
+            }
+          ]
+        },
+        "highlight": {
+          "ind_firstname": [
+            "<em>John</em>"
+          ],
+          "ind_lastname": [
+            "<em>Smith</em>"
+          ],
+          "ind_other_names": [
+            "<em>John</em>  <em>Smith</em>",
+            "<em>John</em> M <em>Smith</em>"
+          ],
+          "ind_firstname.syn": [
+            "<em>John</em>"
+          ],
+          "ind_lastname.syn": [
+            "<em>Smith</em>"
+          ],
+          "ind_other_names.syn": [
+            "<em>John</em>  <em>Smith</em>",
+            "<em>John</em> M <em>Smith</em>"
+          ]
+        }
+      },
+      {
+        "_type": "_doc",
+        "_source": {
+          "ind_source_id": "4346806",
+          "ind_firstname": "JOHN",
+          "ind_middlename": "T.",
+          "ind_lastname": "SMITH",
+          "ind_other_names": [
+            "JOHN T SMITH",
+            "JOHN  SMITH",
+            "John Thomas Smith"
+          ],
+          "ind_bc_scope": "Active",
+          "ind_ia_scope": "Active",
+          "ind_bc_disclosure_fl": "N",
+          "ind_approved_finra_registration_count": 1,
+          "ind_employments_count": 3,
+          "ind_industry_cal_date": "2001-04-30",
+          "ind_current_employments": [
+            {
+              "firm_id": "7784",
+              "firm_name": "FIDELITY BROKERAGE SERVICES LLC",
+              "branch_city": "SEATTLE",
+              "branch_state": "WA",
+              "branch_zip": "98101",
+              "ia_only": "N",
+              "firm_bd_sec_number": "23292",
+              "firm_bd_full_sec_number": "8-23292"
+            },
+            {
+              "firm_id": "7784",
+              "firm_name": "FIDELITY BROKERAGE SERVICES LLC",
+              "branch_city": "KIRKLAND",
+              "branch_state": "WA",
+              "ia_only": "N",
+              "firm_bd_sec_number": "23292",
+              "firm_bd_full_sec_number": "8-23292"
+            },
+            {
+              "firm_id": "104555",
+              "firm_name": "STRATEGIC ADVISERS LLC",
+              "branch_city": "KIRKLAND",
+              "branch_state": "WA",
+              "ia_only": "Y",
+              "firm_ia_sec_number": "13243",
+              "firm_ia_full_sec_number": "801-13243"
+            },
+            {
+              "firm_id": "104555",
+              "firm_name": "STRATEGIC ADVISERS LLC",
+              "branch_city": "SEATTLE",
+              "branch_state": "WA",
+              "branch_zip": "98101-1706",
+              "ia_only": "Y",
+              "firm_ia_sec_number": "13243",
+              "firm_ia_full_sec_number": "801-13243"
+            }
+          ]
+        },
+        "highlight": {
+          "ind_firstname": [
+            "<em>JOHN</em>"
+          ],
+          "ind_lastname": [
+            "<em>SMITH</em>"
+          ],
+          "ind_other_names": [
+            "<em>JOHN</em>  <em>SMITH</em>",
+            "<em>JOHN</em> T <em>SMITH</em>",
+            "<em>John</em> Thomas <em>Smith</em>"
+          ],
+          "ind_firstname.syn": [
+            "<em>JOHN</em>"
+          ],
+          "ind_lastname.syn": [
+            "<em>SMITH</em>"
+          ],
+          "ind_other_names.syn": [
+            "<em>JOHN</em>  <em>SMITH</em>",
+            "<em>JOHN</em> T <em>SMITH</em>",
+            "<em>John</em> Thomas <em>Smith</em>"
+          ]
+        }
+      },
+      {
+        "_type": "_doc",
+        "_source": {
+          "ind_source_id": "428085",
+          "ind_firstname": "JOHN",
+          "ind_middlename": "ROBERT",
+          "ind_lastname": "SMITH",
+          "ind_namesuffix": "JR",
+          "ind_other_names": [
+            "JOHN  SMITH"
+          ],
+          "ind_bc_scope": "NotInScope",
+          "ind_ia_scope": "Active",
+          "ind_bc_disclosure_fl": "N",
+          "ind_approved_finra_registration_count": 0,
+          "ind_employments_count": 1,
+          "ind_current_employments": [
+            {
+              "firm_id": "292023",
+              "firm_name": "OPTIMIST CAPITAL",
+              "branch_city": "PALM BEACH GARDENS",
+              "branch_state": "FL",
+              "branch_zip": "33410",
+              "ia_only": "Y"
+            }
+          ]
+        },
+        "highlight": {
+          "ind_firstname": [
+            "<em>JOHN</em>"
+          ],
+          "ind_lastname": [
+            "<em>SMITH</em>"
+          ],
+          "ind_other_names": [
+            "<em>JOHN</em>  <em>SMITH</em>"
+          ],
+          "ind_firstname.syn": [
+            "<em>JOHN</em>"
+          ],
+          "ind_lastname.syn": [
+            "<em>SMITH</em>"
+          ],
+          "ind_other_names.syn": [
+            "<em>JOHN</em>  <em>SMITH</em>"
+          ]
+        }
+      }
+    ]
+  }
+}
