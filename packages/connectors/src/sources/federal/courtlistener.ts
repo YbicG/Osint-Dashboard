@@ -29,7 +29,12 @@ export const courtListenerConnector = defineConnector({
   costType: 'free',
   transport: 'http',
   jurisdictionScope: 'national',
-  accepts: ['person_name'],
+  // `docket_number` search verified live against the real endpoint during
+  // planning: `?type=r&docket_number=...` returns 200 keyless. The richer
+  // `/dockets/` and `/parties/` detail endpoints 401 without a token, so
+  // this stays on the same `/search/` endpoint for both input types rather
+  // than attempting the detail endpoints and catching the failure.
+  accepts: ['person_name', 'docket_number'],
   emits: ['court_case', 'case_disposition'],
   rateLimitPerMinute: 20,
   robotsPolicy: 'honor',
@@ -38,11 +43,15 @@ export const courtListenerConnector = defineConnector({
   enabledByDefault: true,
 
   async *run(ctx) {
-    if (ctx.input.type !== 'person_name') return
+    if (ctx.input.type !== 'person_name' && ctx.input.type !== 'docket_number') return
 
     const url = new URL(SEARCH_URL)
     url.searchParams.set('type', 'r') // r = RECAP dockets
-    url.searchParams.set('party_name', ctx.input.fullName)
+    if (ctx.input.type === 'person_name') {
+      url.searchParams.set('party_name', ctx.input.fullName)
+    } else {
+      url.searchParams.set('docket_number', ctx.input.value)
+    }
 
     const token = ctx.apiKey('COURTLISTENER_API_TOKEN')
     const res = await ctx.fetch(url.toString(), {
@@ -54,6 +63,12 @@ export const courtListenerConnector = defineConnector({
     }
     const data = (await res.json()) as CourtListenerResponse
 
+    // A direct docket-number lookup is a much stronger identity signal than
+    // a party-name text match, which routinely false-positives on common
+    // names — reflect that in confidence rather than treating both paths
+    // the same.
+    const confidence = ctx.input.type === 'docket_number' ? 0.9 : 0.65
+
     for (const result of data.results ?? []) {
       yield claim('court_case', {
         caseName: result.caseName,
@@ -62,7 +77,7 @@ export const courtListenerConnector = defineConnector({
         status: result.status,
         source: 'RECAP/PACER via CourtListener',
       }, {
-        confidence: 0.65, // party-name text match, not a confirmed identity — common names produce false positives
+        confidence,
         observedAt: result.dateFiled ? new Date(result.dateFiled) : null,
         rawSnippet: `${result.caseName} — ${result.court} — ${result.docketNumber ?? 'no docket #'}`,
         evidenceUrl: `https://www.courtlistener.com${result.absolute_url}`,

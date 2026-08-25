@@ -1,0 +1,26 @@
+{
+  "result": {
+    "input": { "address": { "address": "1600 Pennsylvania Ave NW, Washington, DC" } },
+    "addressMatches": [
+      {
+        "matchedAddress": "1600 PENNSYLVANIA AVE NW, WASHINGTON, DC, 20500",
+        "coordinates": { "x": -77.036545, "y": 38.898754 },
+        "addressComponents": {
+          "zip": "20500",
+          "city": "WASHINGTON",
+          "state": "DC",
+          "streetName": "PENNSYLVANIA",
+          "preType": "AVE",
+          "suffixType": "NW"
+        },
+        "geographies": {
+          "Census Tracts": [{ "GEOID": "11001006202", "NAME": "Census Tract 62.02" }],
+          "Counties": [{ "GEOID": "11001", "NAME": "District of Columbia", "STATE": "11" }],
+          "States": [{ "GEOID": "11", "STATE": "11", "NAME": "District of Columbia" }],
+          "Incorporated Places": [{ "GEOID": "1150000", "NAME": "Washington" }],
+          "119th Congressional Districts": [{ "GEOID": "1198", "NAME": "Congressional District (at Large)" }]
+        }
+      }
+    ]
+  }
+}

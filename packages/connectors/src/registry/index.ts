@@ -29,6 +29,16 @@ import { shodanConnector } from '../sources/consumer_api/shodan'
 import { unConsolidatedConnector } from '../sources/sanctions/un-consolidated'
 import { ukHmtConnector } from '../sources/sanctions/uk-hmt'
 
+// Wave 1 (see docs/PLAN.md M2) — closing the zero-coverage input types
+// (email, address, license_plate, crypto_wallet, docket_number) called out
+// by the search bar's dropdown. courtListenerConnector/rdapConnector are
+// existing connectors widened in place rather than duplicated.
+import { gravatarConnector } from '../sources/digital/gravatar'
+import { censusGeocoderConnector } from '../sources/federal/census-geocoder'
+import { nycOpenViolationsConnector } from '../sources/courts/nyc-open-violations'
+import { licensedPlateLookupConnector } from '../sources/courts/licensed-plate-lookup'
+import { mempoolSpaceConnector } from '../sources/digital/mempool-space'
+
 /**
  * The full connector catalog. This is the single place a new connector gets
  * registered — everything else (the worker's execution loop, the admin
@@ -57,6 +67,12 @@ export const CONNECTOR_REGISTRY: ConnectorDefinition[] = [
   shodanConnector,
   unConsolidatedConnector,
   ukHmtConnector,
+
+  gravatarConnector,
+  censusGeocoderConnector,
+  nycOpenViolationsConnector,
+  licensedPlateLookupConnector,
+  mempoolSpaceConnector,
 ]
 
 export function getConnector(id: string): ConnectorDefinition | undefined {

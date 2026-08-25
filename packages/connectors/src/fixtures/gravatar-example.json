@@ -1,0 +1,17 @@
+{
+  "entry": [
+    {
+      "hash": "205e460b479e2e5b48aec07710c08d50",
+      "requestHash": "205e460b479e2e5b48aec07710c08d50",
+      "profileUrl": "https://gravatar.com/janedoe",
+      "preferredUsername": "janedoe",
+      "displayName": "Jane Doe",
+      "currentLocation": "Austin, TX",
+      "aboutMe": "OSINT test fixture profile.",
+      "accounts": [
+        { "domain": "github.com", "username": "janedoe", "display": "janedoe", "url": "https://github.com/janedoe", "verified": true },
+        { "domain": "x.com", "username": "janedoe", "display": "Jane Doe", "url": "https://x.com/janedoe", "verified": true }
+      ]
+    }
+  ]
+}
