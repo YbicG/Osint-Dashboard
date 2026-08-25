@@ -64,6 +64,13 @@
       "when": 1787683986723,
       "tag": "0008_csv_record_lookup_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1787695717518,
+      "tag": "0009_search_request_pivot_columns",
+      "breakpoints": true
     }
   ]
 }

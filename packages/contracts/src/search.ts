@@ -81,6 +81,14 @@ export const SEARCHABLE_INPUT_TYPES: Exclude<SearchInputType, 'ssn_last4' | 'ima
   'license_plate', 'vin', 'domain', 'ip_address', 'crypto_wallet', 'docket_number',
 ]
 
+/**
+ * Where a search came from — one consistent story across every unattended
+ * path (auto-pivot, manual expand, monitoring), not just user-initiated
+ * ones. See docs/PLAN.md's M3 "Pivot engine" reconciliation section.
+ */
+export const SearchOrigin = z.enum(['user', 'auto_pivot', 'manual_expand', 'monitoring'])
+export type SearchOrigin = z.infer<typeof SearchOrigin>
+
 export const SearchRequest = z.object({
   id: z.string().uuid(),
   caseId: z.string().uuid().nullable(),
@@ -89,5 +97,15 @@ export const SearchRequest = z.object({
   purposeCode: z.string().min(1), // FCRA/compliance gate — required on every search
   requestedByUserId: z.string().uuid(),
   createdAt: z.coerce.date(),
+
+  // --- Pivot engine provenance (M3) ---
+  parentSearchId: z.string().uuid().nullable(),
+  rootSearchId: z.string().uuid().nullable(),
+  pivotDepth: z.number().int().min(0),
+  origin: SearchOrigin,
+  /** "This search exists because claim X asserted phone Y" — the evidentiary payload behind an auto-pivot. Null for a root search. */
+  derivedFromClaimId: z.string().uuid().nullable(),
+  connectorBudget: z.number().int().positive(),
+  connectorBudgetUsed: z.number().int().min(0),
 })
 export type SearchRequest = z.infer<typeof SearchRequest>

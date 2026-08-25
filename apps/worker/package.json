@@ -9,7 +9,8 @@
     "sync-sources": "tsx src/sources/sync-cli.ts",
     "backfill-claim-value-fingerprint": "tsx src/scripts/backfill-claim-value-fingerprint.ts",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run"
   },
   "dependencies": {
     "@osint/contracts": "workspace:*",
@@ -28,6 +29,7 @@
     "@osint/eslint-config": "workspace:*",
     "@types/node": "^22.14.1",
     "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
   }
 }

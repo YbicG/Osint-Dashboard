@@ -6,6 +6,8 @@ export type SearchEvent =
   | { type: 'claim_ingested'; connectorId: string; predicate: string; entityId: string }
   | { type: 'search_complete'; totalClaims: number; subjectEntityId: string }
   | { type: 'search_error'; message: string }
+  | { type: 'pivot_dispatched'; childSearchId: string; inputType: string; viaPredicate: string }
+  | { type: 'pivot_summary'; derived: number; accepted: number; rejectedByReason: Record<string, number> }
 
 export function searchEventChannel(searchId: string): string {
   return `search:${searchId}:events`
