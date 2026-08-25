@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import type Redis from 'ioredis'
 import type { Database } from '@osint/db'
 import { searchRequest, source, collectionRun } from '@osint/db/schema'
-import type { SearchInput } from '@osint/contracts'
+import type { SearchInput, ConnectorMeta } from '@osint/contracts'
 import { planConnectors, createConnectorFetch, ConnectorHttpError } from '@osint/connectors'
 import { BrowserPool } from '@osint/browser'
 import { findOrCreateSubjectEntity } from './resolve-subject'
@@ -12,18 +12,31 @@ import { publishSearchEvent } from '../queue/events'
 
 const CONNECTOR_CONCURRENCY = 6
 
-async function getOrCreateSource(db: Database, connectorId: string, meta: { name: string; category: string; costType: string; robotsPolicy: string }) {
-  const [existing] = await db.select().from(source).where(eq(source.connectorId, connectorId))
-  if (existing) return existing
-  const [created] = await db.insert(source).values({
-    connectorId,
+/**
+ * Single atomic `ON CONFLICT DO NOTHING` rather than select-then-insert —
+ * the prior version's two-step check-then-act raced under concurrent
+ * searches hitting the same never-before-seen connector, and (separately)
+ * used `DO NOTHING` semantics implicitly by never updating an existing row,
+ * which is why a stale seed-time name never self-corrects (see
+ * apps/worker/src/sources/sync.ts, which owns name corrections on startup —
+ * this hot path deliberately does NOT `DO UPDATE`, so it can't stomp a
+ * future admin edit to a source's display name).
+ */
+async function getOrCreateSource(db: Database, meta: ConnectorMeta) {
+  const inserted = await db.insert(source).values({
+    connectorId: meta.id,
     name: meta.name,
-    category: meta.category as never,
-    costType: meta.costType as never,
-    robotsPolicy: meta.robotsPolicy as 'honor' | 'override',
+    category: meta.category,
+    costType: meta.costType,
+    robotsPolicy: meta.robotsPolicy,
     enabled: true,
-  }).returning()
-  return created!
+  }).onConflictDoNothing({ target: source.connectorId }).returning()
+
+  if (inserted[0]) return inserted[0]
+
+  const [existing] = await db.select().from(source).where(eq(source.connectorId, meta.id))
+  if (!existing) throw new Error(`getOrCreateSource: conflict on connectorId=${meta.id} but no row found on fallback select`)
+  return existing
 }
 
 async function runOneConnector(params: {
@@ -37,7 +50,7 @@ async function runOneConnector(params: {
 }) {
   const { db, redis, searchId, primaryEntityId, input, connector, browserPool } = params
 
-  const src = await getOrCreateSource(db, connector.id, connector)
+  const src = await getOrCreateSource(db, connector)
   const [run] = await db.insert(collectionRun).values({
     searchId, sourceId: src.id, connectorId: connector.id, status: 'running',
   }).returning()
@@ -140,7 +153,10 @@ export async function runSearch(db: Database, redis: Redis, searchId: string): P
     )
 
     if (input.type === 'person_name') {
-      await runPostCollectionResolution(db, primaryEntityId)
+      const resolution = await runPostCollectionResolution(db, primaryEntityId)
+      if (resolution.candidatesCapped) {
+        console.warn(`[run-search] entity resolution candidates capped at MAX_CANDIDATES for entity ${primaryEntityId} — a broad blocking key (e.g. a common surname) returned more matches than were scored`)
+      }
     }
 
     const totalClaims = results.reduce((sum, r) => sum + r.claimsProduced, 0)
