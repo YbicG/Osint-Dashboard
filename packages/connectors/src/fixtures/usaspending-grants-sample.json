@@ -1,0 +1,54 @@
+{
+  "spending_level": "awards",
+  "limit": 3,
+  "results": [
+    {
+      "internal_id": 270960042,
+      "Award ID": "SECAAE09GR014",
+      "Recipient Name": "HARVARD UNIVERSITY",
+      "Award Amount": 2000000.0,
+      "Start Date": "2008-10-01",
+      "End Date": "2009-09-30",
+      "Awarding Agency": "Department of State",
+      "Award Type": null,
+      "awarding_agency_id": 315,
+      "agency_slug": "department-of-state",
+      "generated_internal_id": "ASST_NON_SECAAE09GR014_019"
+    },
+    {
+      "internal_id": 270940255,
+      "Award ID": "SCI80019GR0007",
+      "Recipient Name": "FUNDACION DRCLAS HARVARD UNIVERSITY",
+      "Award Amount": 49880.0,
+      "Start Date": "2019-02-14",
+      "End Date": "2020-12-30",
+      "Awarding Agency": "Department of State",
+      "Award Type": "PROJECT GRANT (B)",
+      "awarding_agency_id": 315,
+      "agency_slug": "department-of-state",
+      "generated_internal_id": "ASST_NON_SCI80019GR0007_019"
+    },
+    {
+      "internal_id": 259397245,
+      "Award ID": "AID118A000500062",
+      "Recipient Name": "HARVARD UNIVERSITY",
+      "Award Amount": 0.0,
+      "Start Date": "2008-10-22",
+      "End Date": "2009-06-30",
+      "Awarding Agency": "Agency for International Development",
+      "Award Type": null,
+      "awarding_agency_id": 801,
+      "agency_slug": "agency-for-international-development",
+      "generated_internal_id": "ASST_NON_AID118A000500062_072"
+    }
+  ],
+  "page_metadata": {
+    "page": 1,
+    "hasNext": false,
+    "last_record_unique_id": null,
+    "last_record_sort_value": "None"
+  },
+  "messages": [
+    "For searches, time period start and end dates are currently limited to an earliest date of 2007-10-01.  For data going back to 2000-10-01, use either the Custom Award Download feature on the website or one of our download or bulk_download API endpoints as listed on https://api.usaspending.gov/docs/endpoints. "
+  ]
+}

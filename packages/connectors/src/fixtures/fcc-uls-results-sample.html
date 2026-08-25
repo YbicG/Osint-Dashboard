@@ -1,0 +1,1220 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<SCRIPT TYPE="text/javascript" language="javascript1.2">
+/////////////////////////////////////
+// JavaScript needed for
+// ULS footer search
+// for dynamic include into external-footer.html
+// requires formUtils.jsp to be included in all pages
+// Author: JVS
+// Date  : 1/02/02
+//
+////////////////////////////////////
+
+////////////////////////////////////
+// function validateFooter
+// accepts the form object
+// validate the form
+// stores all error messgages
+// to alert user with single alert at end
+////////////////////////////////////
+var submitOnce = true;
+function validateFooter(form)
+{
+
+    var alertString = "";
+    var tmp = "";
+	if (submitOnce == false)
+	{
+		return false;
+		
+	}
+    //only 10 digit frn
+    if (getSelectValue(form.fiUlsSearchByType).indexOf("uls_l_frn") > -1)
+    {
+		tmp = frnValidateSearch(form.fiUlsSearchByValue.value);
+		if (tmp)
+		{
+			alertString += tmp;
+		}
+    }//end if
+
+    //only 9 lic id
+    if ((getSelectValue(form.fiUlsSearchByType).indexOf("uls_l_licensee_id") > -1)
+        && (form.fiUlsSearchByValue.value.length > 9))
+    {
+        alertString += "Licensee ID must be no more than 9 characters\n";
+    }//end if
+
+    //must have some search field
+    if (! allHaveValues(form.fiUlsSearchByValue))
+    {
+        alertString += "Please enter search criteria\n";
+    }//end if
+
+	if((wildcardCharCHK(form.fiUlsSearchByValue, 'Y')).length > 0){
+		alertString += wildcardCharCHK(form.fiUlsSearchByValue, 'Y');
+	}
+
+    //alert the summary or errors
+    if (alertString)
+    {
+        alert(alertString);
+        return false;
+    }//end if
+
+    setValidatedFlagTrue(form.jsValidated);
+	submitOnce = false;
+    return true;
+
+}//end validate
+
+</SCRIPT>
+
+
+
+
+
+
+
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML lang="en">
+    <head>
+
+    
+
+
+
+
+
+
+        <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+        <title>License Search - Search Results</title>
+        <script type="text/javascript" src="/UlsSearch/ruxitagentjs_ICANVfqru_10341260622154106.js" data-dtconfig="app=12116eb046fa524b|cuc=m6usf5hq|owasp=1|mel=100000|featureHash=ICANVfqru|dpvc=1|lastModification=1787093106312|srsr=20000|tp=500,50,0|rdnt=1|uxrgce=1|srbbv=2|agentUri=/UlsSearch/ruxitagentjs_ICANVfqru_10341260622154106.js|reportUrl=/UlsSearch/rb_706199aa-11a3-4ff8-ba63-645d681c25d1|rid=RID_1891693836|rpid=290412960|domain=fcc.gov"></script><link href="external/wireless.css" rel="styleSheet" type="text/css">
+        <SCRIPT TYPE="text/javascript" language="javascript1.2"  SRC="javascripts/formUtils.js" >
+        </SCRIPT>
+        <SCRIPT TYPE="text/javascript" language="javascript1.2" SRC="javascripts/pageUtils.js">
+        </SCRIPT>
+        <SCRIPT TYPE="text/javascript" language="javascript1.2" SRC="javascripts/UlsSearch/helpWindow.js" >
+        </SCRIPT>
+        <SCRIPT TYPE="text/javascript" language="javascript1.2" SRC="javascripts/UlsSearch/results.js" >
+        </SCRIPT>
+        <script >bazadebezolkohpepadr="1350269886"</script><script type="text/javascript" src="https://wireless2.fcc.gov/akam/13/507b7add"  defer></script></head>
+    <body bgcolor="#FFFFFF" text="#000000" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+
+	<!--serverName=wireless2.fcc.gov-->
+   	
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML lang="en">
+
+    <!-- ===============FCC TOP NAVIGATION fcctop.ssi, start=============== -->
+
+    <!--====================== TOP BANNER TABLES ============================-->
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="graphical layout table">
+      <tr>
+
+    <!--===================== FCC LOGO AND NAME =============================-->
+
+      <td bgcolor="#000099" valign="top" rowspan=2>
+      <a href="#ContentArea" title="Jump to specific page content"><img src="external/images/spacer.gif" width="1" height="1" border="0" alt="Jump to specific page content" align="right"></a>
+      <a href="https://www.fcc.gov/" title="FCC Home"><img src="external/images/fcclogowords.gif" width="165" height="56" border="0" ALT="Federal Communications Commission Logo"></a>
+      </td>
+
+    <!--==== RIGHT CELL FOR EMBEDDED TABLE OF LINKS AND MONTAGE =========-->
+        <td class="blueFCCnav" align="right">
+          <!--=========== EMBEDDED TABLE OF LINKS AND MONTAGE ==================-->
+          <table border="0"  cellpadding="0" cellspacing="0" align="right" summary="fcc top nav links">
+            <tr>
+
+    <!-- ====================== MENU BAR CELL ================================ -->
+              <td class="blueFCCnav" align="center" height="25" nowrap>
+              <a href="#afterfcctop" title="Skip FCC Navigation Links"><img src="external/images/spacer.gif" width=1 height=12 border=0 alt="Skip FCC Navigation Links"></a>
+                <!-- ================ STANDARD FCC TEXT MENU BAR ======================= -->
+                <A HREF="https://www.fcc.gov/" class="blueFCCnav" title="FCC Home"><NOBR>FCC Home</NOBR></A>
+                | <A HREF="https://www.fcc.gov/general/fcc-search-tools" title="Search" class="blueFCCnav">Search</A>
+                | <A HREF="https://www.fcc.gov/news-events" title="Updates" class="blueFCCnav">Updates</A>
+                | <A HREF="https://www.fcc.gov/licensing-databases/online-filing" title="E-Filing" class="blueFCCnav">E-Filing</A>
+                | <A HREF="https://www.fcc.gov/about-fcc/fcc-initiatives" title="Initiatives" class="blueFCCnav">Initiatives</A>
+                | <A HREF="https://www.fcc.gov/consumers" title="For Consumers" class="blueFCCnav"><NOBR>For Consumers</NOBR></A>
+                | <A HREF="https://www.fcc.gov/about-fcc/finding-people-fcc" title="Find People" class="blueFCCnav"><NOBR>Find People</NOBR></A>
+               </td>
+
+
+            <!--============ BLUE RIGHT ENDCAP OF TEXT MENU BAR ===================-->
+            <td class="blueFCCnav">
+            <a name="afterfcctop" title="skip top navigation"><img src="external/images/spacer.gif" width="14" height="1" alt="afterfcctop"></a></td>
+            </tr>
+            <!-- ===============FCC TOP NAVIGATION fcctop.ssi, end=============== -->
+
+            <!-- ===============SECTION TITLE & MONTAGE asr-sectiontop.ssi, start=============== -->
+            <tr>
+            <!--========================= MONTAGE ===================================-->
+            <td align="right" valign="bottom" bgcolor="#000099"> <img src="external/images/collage-uls.jpg" width="490" height="34" border="0" alt="Universal Licensing System"></td>
+
+            <!--============ BLUE RIGHT ENDCAP OF MONTAGE ========================-->
+            <td bgcolor="#000099" valign="bottom" align="right" width="14"><img src="external/images/montage-right-cap.gif" width="14" height="35" border="0" alt="Universal Licensing System"></td>
+          </tr>
+          </table>
+    </td></tr>
+    </table>
+
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" summary="graphical layout table">
+      <tr>
+    <!--==================== GOLD TITLE BAR =================================-->
+        <TD ALIGN="left" BACKGROUND="external/images/page-titlebar-gold2.gif" height="32" width="100%" valign="middle">
+          <!--===================== PAGE TITLE ====================================-->
+          <!-- <img src="external/images/section_title_asr.gif" width="400" height="22" align="middle" alt="Antenna Structure Registration">  -->
+          <div class="header-title">Universal Licensing System</div>
+        </td>
+
+    <!--====== GOLD TITLE BAR & SHADOW RIGHT ENDCAP =====================-->
+        <td bgcolor="#000099" valign="bottom" align="right" width="14" rowspan="2"><img src="external/images/goldbar-right-end-cap2.gif" width="14" height="38" border="0" alt=""></td>
+    </tr>
+    <!--================= TITLEBAR SHADOW =================================-->
+    <tr><td align="left" background="external/images/app-titlebar-shadow.gif" valign="top" width="100%"><img src="external/images/spacer.gif" width="6" height="6" border="0" alt=""></td></tr>
+    </table>
+    <!-- ===============SECTION TITLE & MONTAGE asr-sectiontop.ssi, end=============== -->
+
+    <!-- ===============BREADCRUMB SECTION=============== -->
+    <!-- crumbstart.ssi, start -->
+    <table width="100%" border="0" cellspacing="0" cellpadding="5" bgcolor="#ffffff" summary="bread crumb table">
+      <tr align="left">
+        <td  width=100% background="external/images/crumbmain.gif" align="left" class="breadcrumbs">&nbsp;
+              <a href="https://www.fcc.gov/" title="FCC Home">FCC</a> &gt;
+              <a href="https://www.fcc.gov/wireless-telecommunications" title="Wireless Telecommunications Bureau Home page">WTB</a> &gt;
+              <a href="https://www.fcc.gov/wireless/universal-licensing-system" title="ULS">ULS</a> &gt;
+              <a href="https://www.fcc.gov/wireless/systems-utilities" title="Online Systems">Online Systems</a> &gt;
+               License Search
+        </td>
+        <td align="right" nowrap class="breadcrumbs" background="external/images/crumb-bkgnd-sitemap.gif">
+          <a href="https://www.fcc.gov/" title="FCC Site Map">FCC Site Map</a>&nbsp;&nbsp;&nbsp;
+          </td>
+    	</tr>
+    </table>
+   <!-- crumbend.ssi, end -->
+
+<!-- ---------------FRONT CONTENT BUFFER------------- -->
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+  <tr align="left" valign="top">
+    <td width="10"><img src="external/images/spacer.gif" width="10" height="1" alt=""></td>
+    <td width="100%">&nbsp;<br>
+
+        <a name="ContentArea"></a>
+
+
+
+
+
+      <table width="100%" border="0" cellspacing="0" cellpadding="3" summary="graphical layout table">
+        <tr>
+          <td align="left" valign="top"><span class="text-blue">License Search</span><br>
+            <span class="h2">Search Results</span></td>
+            <td align="right">
+            
+
+&nbsp;&nbsp;<a href="javascript:loadHelpWindow(this.document.URL,'https://wireless2.fcc.gov/helpfiles/')" title="Help in new window"><img src="external/buttons/help.gif" width="53" height="17" border="0" alt="Help in new window"></a>
+
+
+            </td>
+        </tr>
+      <tr>
+          <td colspan="2">
+          
+
+
+    <span class="text-blue-small">
+    &nbsp;&nbsp;<a href=searchLicense.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587 title="New Search" onClick="document.cookie='selectedRSC=cleared';document.cookie='selectedStates=cleared';document.cookie='selectedCountys=cleared';"><img src="external/icons/newsearch.gif" width="16" height="16" alt="New Search Icon" align="absmiddle" border="0"></a>
+    <a href=searchLicense.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587 title="New Search" onClick="document.cookie='selectedRSC=cleared';document.cookie='selectedStates=cleared';document.cookie='selectedCountys=cleared';">New Search</a>
+    </span>
+
+
+
+          
+
+
+          
+
+
+    <span class="text-blue-small">
+    &nbsp;&nbsp;
+    <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=1&printable" target="printable" title="Printable Page, in new window"><img src="external/icons/printer.gif" width="16" height="16" alt="Printer Icon" align="absmiddle" border="0"></a>
+    <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=1&printable" target="printable" title="Printable Page, in new window">Printable Page</a>
+    </span>
+
+
+
+          
+            
+
+    <span class="text-blue-small">
+    &nbsp;&nbsp;
+    <a href="queryDownload.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587" title="Query Download"><img src="external/icons/download.gif" width="16" height="16" alt="Download Icon" align="absmiddle" border="0"></a>
+    <a href="queryDownload.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587" title="Query Download">Query Download</a>
+    </span>
+
+
+
+
+            
+            
+
+
+    <span class="text-blue-small">
+    &nbsp;&nbsp;
+    	<a href=javascript:mapLink(487,"gisResults.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?mapInd=true&curPage=1&reqPage=1") title="Map Licenses"><img src="external/icons/mapIcon.gif" width="16" height="16" alt="Map License Icon" align="absmiddle" border="0"></a>
+    	<a href=javascript:mapLink(487,"gisResults.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?mapInd=true&curPage=1&reqPage=1") title="Map Licenses">Map Licenses</a>
+    	</span>
+
+          
+          </td>
+      </tr>
+      </table>   
+      <br>
+      <div align="center">
+        <table border="0" cellpadding="0" cellspacing="0" width="90%" summary="graphical layout table">
+          <tr>
+            <td class="cell-pri-dark">
+              <table border="0" cellpadding="3" cellspacing="1" width="100%" summary="graphical layout table">
+                <tr align="left">
+                  <td class="cell-pri-dark" valign="top"><b>Specified Search </b></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td class="cell-pri-mediumdark">
+              <table border="0" cellpadding="3" cellspacing="1" width="100%" summary="graphical layout table">
+                <tr>
+                  <td class="cell-pri-light" align="left" valign="bottom">
+                  
+
+
+
+
+Name 
+like <b>Smith, John</b>
+<br>
+
+
+
+
+
+
+
+
+
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        
+          <tr>
+            <td class="cell-pri-dark">
+              <table border="0" cellpadding="3" cellspacing="1" width="100%" summary="graphical layout table">
+                <tr align="left"><td class="cell-pri-dark" valign="middle">
+                
+                    Matches <b>1</b>-
+                    <b>10</b>
+                    (of <b>487</b> )
+                
+                </td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td class="cell-pri-mediumdark">
+
+              <table border="0" cellpadding="3" cellspacing="1" width="100%" summary="graphical layout table">
+                <tr>
+                  <td class="cell-pri-light" align="left" valign="bottom">
+
+                    <table border="0" cellpadding="0" cellspacing="0" align="right" summary="graphical layout table">
+                      
+                      <tr>
+                        <td valign="middle" align="right">
+                          <p><span class="small"><img alt="Pending Application Icon" src="external/images/box_pa.gif" width="15" height="13" border="0">
+                            </span></p>
+                        </td>
+                        <td valign="middle" align="left" class="text-black-small">=
+                          <span class="small">Pending Application(s)</span></td>
+                      </tr>
+                      
+                      <tr>
+                        <td valign="middle" align="right">
+                          <p><span class="small"><img alt="Termination Pending Icon" src="external/images/icon-term.gif" width="15" height="13" border="0">
+                            </span></p>
+                        </td>
+                        <td valign="middle" align="left" class="text-black-small">=
+                          <span class="small">Termination Pending</span></td>
+                      </tr>
+                      <tr>
+                          <td valign="middle" align="right">
+                            <p><span class="small"><img alt="Lease Icon" src="external/images/box_l.gif" width="15" height="13" border="0">
+                              </span></p>
+                          </td>
+                          <td valign="middle" align="left" class="text-black-small">=
+                            <span class="small">Lease</span></td>
+                      </tr>
+                     </table>
+                  </td>
+                </tr>
+              </table>
+			<!-- SCR 8966 #26,27 -->
+			
+			   <table border="0" cellpadding="3" cellspacing="1" width="100%" summary="graphical layout table">
+					<td class="cell-pri-light" align="left" valign="bottom">
+					  <table border="0" cellpadding="3" cellspacing="1" width="100%" summary="graphical layout table">
+						<tr>
+						  <td  align="left" valign="top" class="cell-pri-light"><table width="100%" border="0" cellpadding="0" cellspacing="0">
+							<tr>
+								 <td width="33%" align="left"></td>
+								 <td align="center" width="33%">Page  1 <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=2" title="Page 2">2</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=3" title="Page 3">3</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=4" title="Page 4">4</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=5" title="Page 5">5</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=6" title="Page 6">6</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=7" title="Page 7">7</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=8" title="Page 8">8</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=9" title="Page 9">9</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=10" title="Page 10">10</a></td>
+								 <td width="33%" align="right"> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=2" title="Next page of results"><img src="external/images/nextArrow-blue.gif" alt="Next Page" width="72" height="17" border="0"></a></td>
+							</tr>
+					  </table>
+					 </td>
+						</tr>
+					  </table>
+					</td>
+				 </tr>
+			   </table>
+			
+          <!-- end of SCR 8966 #26,27 -->
+
+           </td>
+          </tr>
+          <tr>
+            <td class="cell-pri-mediumdark">
+              <table border="0" cellpadding="3" cellspacing="1" width="100%" summary="License search results">
+                <tr>
+                <td>&nbsp;</td>
+                
+                
+                    <th align="center" valign="bottom" scope="col">
+                    
+                       Call Sign/Lease ID
+                    
+                    </th>
+                
+                
+                    <th align="center" valign="bottom" scope="col">
+                    
+                       Name
+                    
+                    </th>
+                
+                
+                    <th align="center" valign="bottom" scope="col">
+                    
+                       FRN
+                    
+                    </th>
+                
+                
+                    <th align="center" valign="bottom" scope="col">
+                    
+                       Radio Service
+                    
+                    </th>
+                
+                
+                    <th align="center" valign="bottom" scope="col">
+                    
+                       Status
+                    
+                    </th>
+                
+                
+                    <th align="center" valign="bottom" scope="col">
+                    
+                       Expiration Date
+                    
+                    </th>
+                
+                </tr>
+
+				
+                
+                    <tr align="left" valign="top">
+
+					
+
+                        
+                        <td class="cell-pri-light" nowrap>
+                        1</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							   <a href=license.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licKey=15871 title="View Licensee">1130M</a>
+						   
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   SMITH, JOHN C
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   &nbsp;
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   AC
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   Expired
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   05/30/2004
+							
+						</td>
+                     
+                   </tr>
+                 
+                    <tr align="left" valign="top">
+
+					
+
+                        
+                        <td class="cell-pri-light" nowrap>
+                        2</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							   <a href=license.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licKey=16123 title="View Licensee">115AE</a>
+						   
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   SMITH, JOHN R
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   &nbsp;
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   AC
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   Expired
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   04/20/2005
+							
+						</td>
+                     
+                   </tr>
+                 
+                    <tr align="left" valign="top">
+
+					
+
+                        
+                        <td class="cell-pri-light" nowrap>
+                        3</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							   <a href=license.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licKey=4176136 title="View Licensee">1828Q</a>
+						   
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   Smith, John A
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   0026597583
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   AC
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   Canceled
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   07/03/2029
+							
+						</td>
+                     
+                   </tr>
+                 
+                    <tr align="left" valign="top">
+
+					
+
+                        
+                        <td class="cell-pri-light" nowrap>
+                        4</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							   <a href=license.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licKey=5286652 title="View Licensee">248QK</a>
+						   
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   Smith, John W
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   0027939180
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   AC
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   Active
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   04/16/2036
+							
+						</td>
+                     
+                   </tr>
+                 
+                    <tr align="left" valign="top">
+
+					
+
+                        
+                        <td class="cell-pri-light" nowrap>
+                        5</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							   <a href=license.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licKey=4313893 title="View Licensee">39568</a>
+						   
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   Smith, John A
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   0026597583
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   AC
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   Active
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   07/21/2030
+							
+						</td>
+                     
+                   </tr>
+                 
+                    <tr align="left" valign="top">
+
+					
+
+                        
+                        <td class="cell-pri-light" nowrap>
+                        6</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							   <a href=license.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licKey=49298 title="View Licensee">5239E</a>
+						   
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   SMITH, JOHN L
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   &nbsp;
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   AC
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   Expired
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   10/16/2004
+							
+						</td>
+                     
+                   </tr>
+                 
+                    <tr align="left" valign="top">
+
+					
+
+                        
+                        <td class="cell-pri-light" nowrap>
+                        7</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							   <a href=license.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licKey=2892224 title="View Licensee">63LS</a>
+						   
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   Smith, Johnny L
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   0016242513
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   AC
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   Expired
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   03/20/2017
+							
+						</td>
+                     
+                   </tr>
+                 
+                    <tr align="left" valign="top">
+
+					
+
+                        
+                        <td class="cell-pri-light" nowrap>
+                        8</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							   <a href=license.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licKey=58537 title="View Licensee">6604L</a>
+						   
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   SMITH, JOHN J
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   &nbsp;
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   AC
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   Expired
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   09/22/2004
+							
+						</td>
+                     
+                   </tr>
+                 
+                    <tr align="left" valign="top">
+
+					
+
+                        
+                        <td class="cell-pri-light" nowrap>
+                        9</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							   <a href=license.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licKey=68292 title="View Licensee">7881G</a>
+						   
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   SMITH, JOHN H, MC CORD, GEORGE E
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   &nbsp;
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   AC
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   Expired
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   12/03/2005
+							
+						</td>
+                     
+                   </tr>
+                 
+                    <tr align="left" valign="top">
+
+					
+
+                        
+                        <td class="cell-pri-light" nowrap>
+                        10</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							   <a href=license.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licKey=71740 title="View Licensee">832RS</a>
+						   
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   SMITH, JOHN R
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   &nbsp;
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   AC
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   Expired
+							
+						</td>
+                     
+                        <td class="cell-pri-light" nowrap>
+                        
+							
+							   09/11/2004
+							
+						</td>
+                     
+                   </tr>
+                 
+
+                <!-- SCR 8966 # 14-->
+                <!--
+                <tr align="left" valign="top">
+                  <td class="cell-pri-mediumdark" colspan="7"><img src="external/images/spacer.gif" width="1" height="1" alt=""></td>
+                </tr>
+                -->
+                <tr>
+					<td>&nbsp;</td>
+					
+					
+						<th align="center" valign="bottom" scope="col">
+						
+						   Call Sign/Lease ID
+						
+						</th>
+					
+					
+						<th align="center" valign="bottom" scope="col">
+						
+						   Name
+						
+						</th>
+					
+					
+						<th align="center" valign="bottom" scope="col">
+						
+						   FRN
+						
+						</th>
+					
+					
+						<th align="center" valign="bottom" scope="col">
+						
+						   Radio Service
+						
+						</th>
+					
+					
+						<th align="center" valign="bottom" scope="col">
+						
+						   Status
+						
+						</th>
+					
+					
+						<th align="center" valign="bottom" scope="col">
+						
+						   Expiration Date
+						
+						</th>
+					
+                </tr>
+                <!-- end scr 8966 #14-->
+
+             </table>
+
+            <!-- SCR 8966 #26,27 -->
+            
+				  <table border="0" cellpadding="3" cellspacing="1" width="100%" summary="graphical layout table">
+					<tr>
+					  <td  align="left" valign="top" class="cell-pri-light"><table width="100%" border="0" cellpadding="0" cellspacing="0">
+						<tr>
+							 <td width="33%" align="left"></td>
+							 <td align="center" width="33%">Page  1 <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=2" title="Page 2">2</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=3" title="Page 3">3</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=4" title="Page 4">4</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=5" title="Page 5">5</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=6" title="Page 6">6</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=7" title="Page 7">7</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=8" title="Page 8">8</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=9" title="Page 9">9</a> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=10" title="Page 10">10</a></td>
+							 <td width="33%" align="right"> <a href="results.jsp;JSESSIONID_ULSSEARCH=gA02g_IqSxFdarFhYKvPYL2f66dOkEj14WrwlYQvJewWVli5ufxK!468364341!1762194587?licSearchKey=licSearcKey2026724212313&curPage=1&reqPage=2" title="Next page of results"><img src="external/images/nextArrow-blue.gif" alt="Next Page" width="72" height="17" border="0"></a></td>
+						</tr></table>
+					  </td>
+					</tr>
+				  </table>
+
+			
+            <!-- end scr 8966 #26,27-->
+            </td>
+          </tr>
+          
+        
+        </table>
+        
+
+
+
+   	
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML lang="en">
+<!---
+	  08/27/07, Rajesh Singh; SCR 11994 - Update URL for Submit Help Request Footer Link
+
+	  04/03/08, Rajesh Singh; SCR 11823 - Link from ULS to ROSIE needs to be modified
+			Changed from svartifoss2 to fjallfoss
+
+--->
+    </td>
+    <td width="10"><img src="external/images/spacer.gif" width="10" height="1" alt=""></td>
+  </tr>
+</table>
+
+        <!--load smartupdate script for applications and search link-->
+        <SCRIPT TYPE="text/javascript" language="javascript1.2"  SRC="javascripts/wtb05smartupd.js" >
+        </SCRIPT>
+
+  <!--applicationfooter.ssi ,start-->
+  <a href="#jumptoendofpage" title="Jump to end of page"><img src="external/images/spacer.gif" width="14" height="1" border="0" alt="Jump to end of page"></a>
+  <a href="#afterbottomnav" title="Skip Bottom Navigation Links"><img src="external/images/spacer.gif" width="20" height="1" border="0" alt="Skip Bottom Navigation Links"></a>
+  <form action="results.jsp" name="footersearch" id="footersearch" method="post"  OnSubmit="return validateFooter(this);"><div align="center">
+    <table width="90%" border="0" cellspacing="0" cellpadding="0" summary="graphical layout table">
+      <tr align="left" valign="top">
+        <td colspan="6">&nbsp;</td>
+      </tr>
+      <tr align="left" valign="top">
+        <td colspan="6" class="cell-pri-mediumdark">
+
+          <table width="100%" cellpadding="3" cellspacing="1" border="0" summary="site navigation table">
+            <tr align="left" valign="middle">
+              <td width="20%" class="cell-pri-medium" nowrap>
+              <span class="text-black-small"><b>ULS Help</b></span>
+              </td>
+              <td class="cell-pri-light">
+                <span class="text-black-small">
+                <a href="https://www.fcc.gov/uls-frequently-asked-questions" title="FAQ, in new window" target="_blank">FAQ</a>
+                - <a href="javascript:loadHelpWindow('help','https://wireless2.fcc.gov/helpfiles/')" title="Online Help, in new window" >Online Help</a>
+                - <a href="https://www.fcc.gov/wtbhelp" title="Technical Support, in new full sized window" target="_blank">Technical Support</a>
+                - <a href="https://www.fcc.gov/wtbhelp" title="Licensing Support, in new window" target="_blank">Licensing Support</a>
+               </span>
+              </td>
+            </tr>
+            <tr align="left" valign="middle">
+              <td width="20%" class="cell-pri-medium" nowrap>
+              <span class="text-black-small">
+              <b>ULS Online Systems</b>
+              </span></td>
+              <td class="cell-pri-light">
+              <span class="text-black-small">
+              <a href="https://apps.fcc.gov/cores/userLogin.do" title="CORES">CORES</a>
+              - <a href="https://wireless2.fcc.gov/UlsEntry/licManager/login.jsp" title="ULS Online Filing" onclick="return smartUpdate(this);">ULS Online Filing</a>
+              - <a href="https://wireless2.fcc.gov/UlsApp/UlsSearch/searchLicense.jsp" title="License Search">License Search</a>
+              - <a href="https://wireless2.fcc.gov/UlsApp/ApplicationSearch/searchAppl.jsp" title="Application Search" onclick="return smartUpdate(this);">Application Search</a>
+              - <a href="https://wireless2.fcc.gov/UlsApp/LicArchive/searchArchive.jsp" title="Archive License Search">Archive License Search</a>
+              </span></td>
+            </tr>
+            <tr align="left" valign="middle">
+              <td width="20%" class="cell-pri-medium" nowrap>
+              <span class="text-black-small">
+              <b>About ULS</b>
+              </span></td>
+              <td  class="cell-pri-light">
+              <span class="text-black-small">
+              <a href="https://www.fcc.gov/website-notices" title="Privacy Statement">Privacy Statement</a>
+              - <a href="https://www.fcc.gov/new-users-guide-getting-started-universal-licensing-system-uls" title="About ULS">About ULS</a>
+              - <a href="https://www.fcc.gov/wireless/universal-licensing-system" title="ULS Home">ULS Home</a>
+              </span></td>
+            </tr>
+
+            <tr align="left" valign="middle">
+              <td width="20%" class="cell-pri-medium" nowrap>
+              <span class="text-black-small"><b>Basic Search </b></span></td>
+              <td  class="cell-pri-light">
+                  <select name="fiUlsSearchByType" size="1">
+                       <option value="uls_l_callsign                ">By Call Sign</option>
+                       <option value="uls_l_frn                     ">By FRN</option>
+                       <option value="uls_l_name                    ">By Licensee Name</option>
+                  </select>
+                  =
+                  <input type="text" name="fiUlsSearchByValue" size="16">
+                  <input type="hidden" value="N" name="fiUlsExactMatchInd">
+                <!--
+                <input type="image" src="external/buttons/submit-blue.gif" width="53" height="17" align="absmiddle" alt="Submit" name="Submit" border="0">
+
+                <a href="javascript:document.footersearch.reset();" title="Reset"><img src="external/buttons/reset-blue.gif" width="45" height="17" border="0" align="absmiddle" alt="Reset"></a>
+                -->
+                <input type="image" src="external/buttons/newsearch-blue.gif" width="70" height="17" alt="Search" border="0" alt="Submit Search">
+
+
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr align="left" valign="top">
+        <td colspan="6">&nbsp;</td>
+      </tr>
+    </table>
+    <a name="afterfccbottom"></a> </div>
+  <input type=hidden name="hiddenForm" value ="hiddenForm" >
+  <input type="hidden" name="jsValidated" value="false">
+  <input type="hidden" name="footerSearch" value="true">
+  </form>
+
+     <!--applicationfooter.ssi ,end-->
+
+    <a name="jumptoendofpage"></a>
+
+<!--- 07/31/07, Rajesh Singh;
+		SCR 11555 - ULS Footers are Pointing to wrong web page
+		SCR 11662 - Order of footer links incorrect for certain license manager applications
+--->
+<table width="99%" border="0" cellspacing="0" cellpadding="1" align="center">
+  <tr>
+    <td class="cell-graylight"><img src="external/images/spacer.gif" width="1" height="1" alt=""></td>
+  </tr>
+</table>
+<table width="100%" border="0" cellspacing="0" cellpadding="10">
+      <tr valign="top">
+        <td class="text-gray-small" width="50%">
+              <a href="https://www.fcc.gov/" title="FCC Home">FCC</a> |
+              <a href="https://www.fcc.gov/wireless-telecommunications" title="Wireless Telecommunications Bureau Home">Wireless</a> |
+              <a href="https://www.fcc.gov/wireless/universal-licensing-system/" title="ULS">ULS</a> |
+              <a href="https://apps.fcc.gov/cores/userLogin.do" title="CORES">CORES</a>
+        </td>
+        <td class="text-gray-small" width="50%" align="right">
+              <a href="https://www.fcc.gov/wtbhelp/" target="_new" title="Help">Help</a> |
+              <a href="https://www.fcc.gov/wtbhelp" target="_new" title="Tech Support">Tech Support</a>
+        </td>
+      </tr>
+</table>
+<table border="0" cellspacing="0" cellpadding="10" width="100%">
+  <tr valign="top">
+    <td class="text-gray-small" nowrap width="50%">Federal Communications Commission<br>
+      45 L Street NE<br>
+      Washington, DC 20554</td>
+    <td class="text-gray-small" width="50%" align="right">
+      <table border="0" cellspacing="0" cellpadding="1" width="200">
+        <tr>
+          <td valign="top" align="right" class="text-gray-small" nowrap>Phone: 1-877-480-3201</td>
+        </tr>
+        <tr>
+          <td valign="top" align="right" class="text-gray-small" nowrap>ASL Videophone:1-844-432-2275</td>
+        </tr>
+        <tr>
+          <td valign="top" align="right" class="text-gray-small" nowrap>
+		  <a href="https://fccprod.servicenowservices.com/auls?id=esupport" title="Submit Help Request">Submit Help Request</a>
+		  </td>
+		</tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+
+
+
+
+

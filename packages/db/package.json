@@ -1,0 +1,32 @@
+{
+  "name": "@osint/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts"
+  },
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/migrate.ts",
+    "db:seed": "tsx src/seed.ts",
+    "db:studio": "drizzle-kit studio",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@osint/contracts": "workspace:*",
+    "drizzle-orm": "^0.38.3",
+    "postgres": "^3.4.5"
+  },
+  "devDependencies": {
+    "@osint/typescript-config": "workspace:*",
+    "@osint/eslint-config": "workspace:*",
+    "drizzle-kit": "^0.30.2",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}

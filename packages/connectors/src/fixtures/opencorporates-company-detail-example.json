@@ -1,0 +1,84 @@
+{
+    "api_version": "0.4",
+    "results": {
+        "company": {
+            "branch_status": null,
+            "company_number": "00102498",
+            "company_type": "Public Limited Company",
+            "created_at": "2010-10-21T18:20:50+01:00",
+            "current_status": "Active",
+            "dissolution_date": null,
+            "inactive": false,
+            "incorporation_date": "1909-04-14",
+            "jurisdiction_code": "gb",
+            "name": "BP P.L.C.",
+            "officers": [
+                {
+                    "officer": {
+                        "end_date": null,
+                        "id": 32609673,
+                        "name": "DAVID JOHN JACKSON",
+                        "opencorporates_url": "https://opencorporates.com/officers/32609673",
+                        "position": "secretary",
+                        "start_date": "2003-07-24",
+                        "uid": null
+                    }
+                },
+                {
+                    "officer": {
+                        "end_date": "2012-03-30",
+                        "id": 32609674,
+                        "name": "DAVID JOHN PEARL",
+                        "opencorporates_url": "https://opencorporates.com/officers/32609674",
+                        "position": "secretary",
+                        "start_date": "2001-11-01",
+                        "uid": null
+                    }
+                },
+                {
+                    "officer": {
+                        "end_date": null,
+                        "id": 32609675,
+                        "name": "PAUL MILTON ANDERSON",
+                        "opencorporates_url": "https://opencorporates.com/officers/32609675",
+                        "position": "director",
+                        "start_date": "2010-02-01",
+                        "uid": null
+                    }
+                },
+                {
+                    "officer": {
+                        "end_date": null,
+                        "id": 32609676,
+                        "name": "FRANK BOWMAN",
+                        "opencorporates_url": "https://opencorporates.com/officers/32609676",
+                        "position": "director",
+                        "start_date": "2010-11-08",
+                        "uid": null
+                    }
+                }
+            ],
+            "opencorporates_url": "https://opencorporates.com/companies/gb/00102498",
+            "previous_names": [
+                {
+                    "company_name": "BP AMOCO P.L.C.",
+                    "con_date": "2001-05-01"
+                },
+                {
+                    "company_name": "THE BRITISH PETROLEUM COMPANY P.L.C.",
+                    "con_date": "1998-12-31"
+                }
+            ],
+            "registered_address_in_full": "1 ST JAMES'S SQUARE, LONDON, SW1Y 4PD",
+            "registry_url": "http://data.companieshouse.gov.uk/doc/company/00102498",
+            "retrieved_at": "2014-02-16T10:06:59+00:00",
+            "source": {
+                "publisher": "UK Companies House",
+                "retrieved_at": "2014-02-16T10:06:59+00:00",
+                "terms": "UK Crown Copyright",
+                "url": "http://xmlgw.companieshouse.gov.uk/"
+            },
+            "updated_at": "2014-02-16T10:07:06+00:00"
+        }
+    }
+}

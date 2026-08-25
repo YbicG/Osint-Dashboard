@@ -1,0 +1,54 @@
+{
+  "spending_level": "awards",
+  "limit": 3,
+  "results": [
+    {
+      "internal_id": 350875558,
+      "Award ID": "ZV49",
+      "Recipient Name": "LOCKHEED MARTIN INTEGRATED SYSTEMS, LLC",
+      "Award Amount": 172023.84,
+      "Start Date": "2013-09-10",
+      "End Date": "2013-10-15",
+      "Awarding Agency": "Department of Defense",
+      "Contract Award Type": "DELIVERY ORDER",
+      "awarding_agency_id": 1173,
+      "agency_slug": "department-of-defense",
+      "generated_internal_id": "CONT_AWD_ZV49_9700_FA877104D0008_9700"
+    },
+    {
+      "internal_id": 350875543,
+      "Award ID": "ZV48",
+      "Recipient Name": "LOCKHEED MARTIN INTEGRATED SYSTEMS, LLC",
+      "Award Amount": 43342.26,
+      "Start Date": "2013-08-19",
+      "End Date": "2016-08-13",
+      "Awarding Agency": "Department of Defense",
+      "Contract Award Type": "DELIVERY ORDER",
+      "awarding_agency_id": 1173,
+      "agency_slug": "department-of-defense",
+      "generated_internal_id": "CONT_AWD_ZV48_9700_FA877104D0008_9700"
+    },
+    {
+      "internal_id": 350875531,
+      "Award ID": "ZV47",
+      "Recipient Name": "LOCKHEED MARTIN INTEGRATED SYSTEMS, LLC",
+      "Award Amount": 6507.44,
+      "Start Date": "2012-09-29",
+      "End Date": "2012-09-30",
+      "Awarding Agency": "Department of Defense",
+      "Contract Award Type": "DELIVERY ORDER",
+      "awarding_agency_id": 1173,
+      "agency_slug": "department-of-defense",
+      "generated_internal_id": "CONT_AWD_ZV47_9700_FA877104D0008_9700"
+    }
+  ],
+  "page_metadata": {
+    "page": 1,
+    "hasNext": true,
+    "last_record_unique_id": 350875531,
+    "last_record_sort_value": "ZV47"
+  },
+  "messages": [
+    "For searches, time period start and end dates are currently limited to an earliest date of 2007-10-01.  For data going back to 2000-10-01, use either the Custom Award Download feature on the website or one of our download or bulk_download API endpoints as listed on https://api.usaspending.gov/docs/endpoints. "
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "api_version": "0.4",
+  "results": {
+    "page": 1,
+    "per_page": 30,
+    "total_pages": 2,
+    "total_count": 31,
+    "officers": [
+      {
+        "officer": {
+          "id": 280995341,
+          "uid": null,
+          "name": "CHRISTOPHER TAGGART",
+          "jurisdiction_code": "gb",
+          "position": "director",
+          "retrieved_at": "2023-04-04T00:00:00+00:00",
+          "opencorporates_url": "https://opencorporates.com/officers/280995341",
+          "start_date": "2018-03-21",
+          "end_date": null,
+          "occupation": "DIRECTOR",
+          "current_status": null,
+          "inactive": null,
+          "address": "ASTON HOUSE CORNWALL AVENUE, LONDON, N3 1LF, UNITED KINGDOM",
+          "nationality": "BRITISH",
+          "date_of_birth": null,
+          "company": {
+            "name": "OPENCORPORATES HOLDING LTD",
+            "jurisdiction_code": "gb",
+            "company_number": "11268479",
+            "opencorporates_url": "https://opencorporates.com/companies/gb/11268479"
+          }
+        }
+      }
+    ]
+  }
+}

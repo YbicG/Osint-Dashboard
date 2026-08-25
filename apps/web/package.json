@@ -1,0 +1,43 @@
+{
+  "name": "@osint/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@osint/contracts": "workspace:*",
+    "@osint/db": "workspace:*",
+    "@osint/core": "workspace:*",
+    "@osint/connectors": "workspace:*",
+    "next": "16.0.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "bullmq": "^5.34.3",
+    "ioredis": "^5.4.2",
+    "drizzle-orm": "^0.38.3",
+    "zod": "^3.24.1",
+    "lucide-react": "^0.548.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.3.1",
+    "cytoscape": "^3.34.1",
+    "maplibre-gl": "^6.6.0",
+    "playwright": "^1.49.1"
+  },
+  "devDependencies": {
+    "@osint/typescript-config": "workspace:*",
+    "@tailwindcss/postcss": "^4",
+    "@types/cytoscape": "^3.31.0",
+    "@types/node": "^22.14.1",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.0.0",
+    "tailwindcss": "^4",
+    "typescript": "^5.9.2"
+  }
+}

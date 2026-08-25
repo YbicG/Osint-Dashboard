@@ -1,0 +1,48 @@
+{
+  "organization": {
+    "id": 731395241,
+    "ein": 731395241,
+    "name": "John Smith Zink Foundation",
+    "careofname": "% DARTON J ZINK",
+    "address": "PO BOX 52508",
+    "city": "Tulsa",
+    "state": "OK",
+    "zipcode": "74152-0508",
+    "subsection_code": 3,
+    "ntee_code": "Z99",
+    "asset_amount": 3227400,
+    "income_amount": 794119,
+    "revenue_amount": null,
+    "data_source": "current_2026_08_19"
+  },
+  "filings_with_data": [
+    {
+      "tax_prd": 202312,
+      "tax_prd_yr": 2023,
+      "formtype": 2,
+      "pdf_url": "https://projects.propublica.org/nonprofits/download-filing?path=IRS%2F731395241_202312_990PF_2025010222970232.pdf",
+      "updated": "2025-08-05T16:14:42.271Z",
+      "totrevenue": 89335,
+      "totfuncexpns": 66479,
+      "totassetsend": 3141599,
+      "totliabend": 1,
+      "tax_yr": 2023,
+      "ein": 731395241
+    },
+    {
+      "tax_prd": 202212,
+      "tax_prd_yr": 2022,
+      "formtype": 2,
+      "pdf_url": "https://projects.propublica.org/nonprofits/download-filing?path=download990pdf_12_2023_prefixes_72-74%2F731395241_202212_990PF_2023120422057152.pdf",
+      "updated": "2024-08-28T20:28:37.965Z",
+      "totrevenue": 131463,
+      "totfuncexpns": 71479,
+      "totassetsend": 3120296,
+      "totliabend": 1,
+      "tax_yr": 2022,
+      "ein": 731395241
+    }
+  ],
+  "data_source": "ProPublica Nonprofit Explorer API: https://projects.propublica.org/nonprofits/api/\nIRS Exempt Organizations Business Master File Extract (EO BMF): https://www.irs.gov/charities-non-profits/exempt-organizations-business-master-file-extract-eo-bmf\nIRS Annual Extract of Tax-Exempt Organization Financial Data: https://www.irs.gov/uac/soi-tax-stats-annual-extract-of-tax-exempt-organization-financial-data",
+  "api_version": 2
+}

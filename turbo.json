@@ -1,0 +1,72 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "ui": "tui",
+  "globalEnv": [
+    "NODE_ENV",
+    "DATABASE_URL",
+    "REDIS_URL",
+    "MINIO_ENDPOINT",
+    "MINIO_ACCESS_KEY",
+    "MINIO_SECRET_KEY",
+    "MINIO_BUCKET",
+    "AUTH_SECRET",
+    "VISION_SERVICE_URL",
+    "PROXY_POOL_URL",
+    "COURTLISTENER_API_TOKEN",
+    "ENFORMION_API_KEY",
+    "PEOPLEDATALABS_API_KEY",
+    "TWILIO_ACCOUNT_SID",
+    "TWILIO_AUTH_TOKEN",
+    "NUMVERIFY_API_KEY",
+    "HUNTER_API_KEY",
+    "IPQUALITYSCORE_API_KEY",
+    "SHODAN_API_KEY",
+    "HIBP_API_KEY",
+    "OPENCORPORATES_API_KEY",
+    "CAPTCHA_SOLVER_PROVIDER",
+    "CAPTCHA_SOLVER_API_KEY",
+    "PROXY_POOL_JSON",
+    "MODEL_CACHE_DIR",
+    "SEED_ADMIN_EMAIL",
+    "SEED_ADMIN_PASSWORD"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": ["dist/**", ".next/**", "build/**", "!.next/cache/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "start": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build", "^typecheck"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": ["coverage/**"]
+    },
+    "test:live": {
+      "cache": false,
+      "dependsOn": ["^build"]
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false
+    },
+    "db:seed": {
+      "cache": false,
+      "dependsOn": ["db:migrate"]
+    }
+  }
+}

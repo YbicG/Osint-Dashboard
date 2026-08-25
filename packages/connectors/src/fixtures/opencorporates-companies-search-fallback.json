@@ -1,0 +1,45 @@
+{
+  "api_version": "0.4",
+  "results": {
+    "page": 1,
+    "per_page": 30,
+    "total_count": 2,
+    "total_pages": 1,
+    "companies": [
+      {
+        "company": {
+          "name": "OPENCORPORATES LTD",
+          "company_number": "07444723",
+          "jurisdiction_code": "gb",
+          "incorporation_date": "2010-11-18",
+          "dissolution_date": null,
+          "company_type": "Private Limited Company",
+          "registry_url": "https://beta.companieshouse.gov.uk/company/07444723",
+          "current_status": "Active",
+          "created_at": "2010-12-18T01:35:14+00:00",
+          "updated_at": "2023-03-18T10:58:57+00:00",
+          "retrieved_at": "2023-03-18T10:58:55+00:00",
+          "opencorporates_url": "https://opencorporates.com/companies/gb/07444723",
+          "registered_address_in_full": "Aston House\nCornwall Avenue, London, N3 1LF"
+        }
+      },
+      {
+        "company": {
+          "name": "JANE COOPER CONSULTING LLC",
+          "company_number": "7654321",
+          "jurisdiction_code": "us_de",
+          "incorporation_date": "2019-06-01",
+          "dissolution_date": null,
+          "company_type": "Limited Liability Company",
+          "registry_url": null,
+          "current_status": "Active",
+          "created_at": "2019-06-02T00:00:00+00:00",
+          "updated_at": "2019-06-02T00:00:00+00:00",
+          "retrieved_at": "2019-06-02T00:00:00+00:00",
+          "opencorporates_url": "https://opencorporates.com/companies/us_de/7654321",
+          "registered_address_in_full": null
+        }
+      }
+    ]
+  }
+}

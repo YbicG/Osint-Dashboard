@@ -1,0 +1,29 @@
+{
+  "name": "@osint/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@osint/contracts": "workspace:*",
+    "@osint/db": "workspace:*",
+    "@osint/core": "workspace:*",
+    "@osint/browser": "workspace:*",
+    "@osint/connectors": "workspace:*",
+    "bullmq": "^5.34.3",
+    "ioredis": "^5.4.2",
+    "drizzle-orm": "^0.38.3"
+  },
+  "devDependencies": {
+    "@osint/typescript-config": "workspace:*",
+    "@osint/eslint-config": "workspace:*",
+    "@types/node": "^22.14.1",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  }
+}
