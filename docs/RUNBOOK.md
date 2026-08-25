@@ -165,19 +165,55 @@ created. To reset, delete the row from `app_user` (or change
 
 The CSV Search feature (`packages/db/src/schema/csv-search.ts`,
 `apps/worker/src/csv/`) was originally sized for "hundreds of thousands to
-low millions of rows" on one local Postgres instance. Past that, three
-things dominate and are each addressed below: GIN index maintenance,
-Postgres's stock (tiny) default memory settings, and per-row/per-batch
-INSERT overhead.
+low millions of rows" on one local Postgres instance. Past that, several
+things dominate and are each addressed below: the data model itself,
+index maintenance, Postgres's stock (tiny) default memory settings, and
+per-row/per-batch INSERT overhead.
+
+### 0. Data model: typed lookup columns, not a generic search blob
+
+The original design stored every row's values twice — once verbatim in
+`data` (jsonb), again concatenated into a `search_text` column that backed
+a generated `search_vector` tsvector column plus a trigram index, so any
+free-text query could match anywhere in the row. That's the wrong shape
+for a large **fixed-schema PII source** (SSNs, names, DOBs, phones,
+addresses): the actual query pattern is exact/prefix lookup on a specific
+field, not free-text search, and duplicating every value into a searchable
+blob plus a tsvector column roughly doubles storage at billion-row scale —
+the difference between fitting on a drive and not.
+
+`packages/db/migrations/0008_csv_record_lookup_columns.sql` replaced that
+with typed columns (`ssn`, `first_name`, `last_name`, `dob`, `phone`,
+`zip`, `city`, `state`, `address`), populated at index time by
+`packages/core/src/pii/lookup-fields.ts`'s header-alias detection (e.g. a
+source column named `phone1` or `telephone` both map to `phone`,
+normalized digits-only) — see that file and
+`packages/db/src/schema/csv-search.ts`'s doc comment for the full
+reasoning. `data` (the full row, verbatim) is unchanged and still backs
+the record panel and PII masking (`packages/core/src/pii/sensitive-columns.ts`)
+— only the *search* path changed. A file whose headers don't match any
+recognized alias just gets `NULL` lookup columns for its rows; that data
+is still viewable, just not reachable through structured search — check
+`csv_source_file.columns` against `lookup-fields.ts`'s alias lists if a
+file's rows aren't turning up in search results.
+
+**If you loaded data under the old schema before this migration**, those
+`csv_record` rows have no lookup columns populated (the columns didn't
+exist yet). Delete and re-add the affected CSV source folder(s) rather
+than trying to backfill — re-indexing from the original CSV files is
+simpler and no slower than a billion-row UPDATE would be.
 
 ### 1. Run the tuning script (drops indexes + tunes Postgres, one shot)
 
 `infra/scripts/tune-for-bulk-load.ps1` does everything in this section in
-one go: drops `csv_record_search_vector_idx` and
-`csv_record_search_text_trgm_idx` (both GIN — incremental maintenance on
-every insert, the trigram one especially, is usually the single biggest
-cost at this scale, so build fresh after loading instead), disables
-autovacuum on `csv_record`, relaxes durability/checkpoint settings, bumps
+one go: drops all seven `csv_record` search indexes (six B-tree —
+`csv_record_ssn_idx`, `_last_name_idx`, `_first_name_idx`, `_phone_idx`,
+`_zip_idx`, `_dob_idx` — plus the one trigram GIN, `csv_record_ssn_trgm_idx`,
+which supports substring/suffix SSN search, e.g. "last 4 digits" —
+incremental index maintenance on every insert is real overhead even for
+cheap B-trees at this row count, and the trigram one especially, so build
+fresh after loading instead), disables autovacuum on `csv_record`, relaxes
+durability/checkpoint settings, bumps
 `shared_buffers`/`effective_cache_size`/`maintenance_work_mem`/`work_mem`,
 and **restarts the postgres container** (required for `shared_buffers` to
 take effect — run this before anything is writing to `csv_record`, not
@@ -190,14 +226,14 @@ mid-load):
 Then add the CSV source folder(s) — that's what actually starts indexing.
 
 Once the load is fully done, revert the durability/vacuum settings and
-rebuild the two indexes:
+rebuild the indexes:
 
 ```powershell
 ./infra/scripts/tune-for-bulk-load.ps1 -Revert
 ```
 
 ```bash
-docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "CREATE INDEX csv_record_search_vector_idx ON csv_record USING gin (search_vector); CREATE INDEX csv_record_search_text_trgm_idx ON csv_record USING gin (search_text gin_trgm_ops); ANALYZE csv_record;"
+docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "CREATE INDEX csv_record_ssn_idx ON csv_record USING btree (ssn); CREATE INDEX csv_record_last_name_idx ON csv_record USING btree (last_name); CREATE INDEX csv_record_first_name_idx ON csv_record USING btree (first_name); CREATE INDEX csv_record_phone_idx ON csv_record USING btree (phone); CREATE INDEX csv_record_zip_idx ON csv_record USING btree (zip); CREATE INDEX csv_record_dob_idx ON csv_record USING btree (dob); CREATE INDEX csv_record_ssn_trgm_idx ON csv_record USING gin (ssn gin_trgm_ops); ANALYZE csv_record;"
 ```
 (non-concurrently is fine — and faster — if nothing else needs to query
 the table meanwhile; use `CREATE INDEX CONCURRENTLY` instead if it does)
@@ -219,7 +255,7 @@ that way fails with `ALTER SYSTEM cannot run inside a transaction block`.
 Pass each statement as its own `-c` flag instead:
 
 ```bash
-docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "DROP INDEX IF EXISTS csv_record_search_vector_idx;" -c "DROP INDEX IF EXISTS csv_record_search_text_trgm_idx;" -c "ALTER TABLE csv_record SET (autovacuum_enabled = false);" -c "ALTER SYSTEM SET synchronous_commit = off;" -c "ALTER SYSTEM SET maintenance_work_mem = '4GB';" -c "ALTER SYSTEM SET work_mem = '256MB';" -c "ALTER SYSTEM SET max_wal_size = '16GB';" -c "ALTER SYSTEM SET checkpoint_timeout = '30min';" -c "ALTER SYSTEM SET shared_buffers = '16GB';" -c "ALTER SYSTEM SET effective_cache_size = '48GB';"
+docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "DROP INDEX IF EXISTS csv_record_ssn_idx;" -c "DROP INDEX IF EXISTS csv_record_last_name_idx;" -c "DROP INDEX IF EXISTS csv_record_first_name_idx;" -c "DROP INDEX IF EXISTS csv_record_phone_idx;" -c "DROP INDEX IF EXISTS csv_record_zip_idx;" -c "DROP INDEX IF EXISTS csv_record_dob_idx;" -c "DROP INDEX IF EXISTS csv_record_ssn_trgm_idx;" -c "ALTER TABLE csv_record SET (autovacuum_enabled = false);" -c "ALTER SYSTEM SET synchronous_commit = off;" -c "ALTER SYSTEM SET maintenance_work_mem = '4GB';" -c "ALTER SYSTEM SET work_mem = '256MB';" -c "ALTER SYSTEM SET max_wal_size = '16GB';" -c "ALTER SYSTEM SET checkpoint_timeout = '30min';" -c "ALTER SYSTEM SET shared_buffers = '16GB';" -c "ALTER SYSTEM SET effective_cache_size = '48GB';"
 ```
 
 `docker compose` resolves `-f infra/docker-compose.yml` relative to your
@@ -244,7 +280,11 @@ docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "ALTER TABL
 and writes to `csv_record` via Postgres `COPY FROM STDIN`
 (`pgClient\`copy ...\`.writable()`, the raw postgres.js client exported as
 `pgClient` from `packages/db/src/client.ts` — Drizzle's own `sql` helper
-only builds fragments for `db.execute()`, it doesn't expose COPY). This
+only builds fragments for `db.execute()`, it doesn't expose COPY). Each
+COPY line carries `file_id, folder_id, row_number, data` plus the nine
+typed lookup columns (`ssn, first_name, last_name, dob, phone, zip, city,
+state, address`, extracted per-row via `detectLookupFieldMapping`/
+`normalizeLookupValue` from `@osint/core` — see section 0 above). This
 replaced an earlier batched-`INSERT` version once file sizes grew into the
 hundreds of millions of rows, where per-statement planning/parameter-binding
 overhead (even batched at thousands of rows/statement) became the

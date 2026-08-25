@@ -62,17 +62,25 @@ export const csvSourceFile = pgTable('csv_source_file', {
  * keyed by whatever headers that file used — deliberately not a fixed
  * schema (real-world "authorized CSV files" vary source to source; see
  * packages/db/src/schema/claim.ts's `value` jsonb column for the same
- * arbitrary-shape pattern elsewhere in this codebase).
+ * arbitrary-shape pattern elsewhere in this codebase). Always populated,
+ * always what the record panel renders — unaffected by anything below.
  *
- * `searchText` is every value concatenated and lowercased at index time
- * (apps/worker/src/csv/index-file.ts) — it backs both the full-text
- * (`search_vector`, a generated tsvector column) and trigram indexes added
- * by the hand-written packages/db/migrations/000X_csv_search_indexes.sql
- * migration, since Drizzle Kit here has no first-class support for
- * generated columns. Sensitive values (SSNs, etc.) ARE included in
- * searchText — masking is a display-time concern only (see
- * packages/core/src/pii/sensitive-columns.ts); an analyst must still be
- * able to search *by* an SSN to find the record it belongs to.
+ * The columns below are a DIFFERENT thing: structured search keys,
+ * extracted and normalized from `data` at index time via
+ * packages/core/src/pii/lookup-fields.ts's header-alias detection (e.g. a
+ * source column named "phone1" or "telephone" both map to `phone`,
+ * digits-only). This replaced an earlier generic
+ * search_text/search_vector(tsvector)/trigram design — see
+ * docs/RUNBOOK.md's "Bulk-loading very large CSV files" for why: at
+ * billion-row scale, storing every value twice (once in `data`, again
+ * concatenated into a searchable blob) plus a tsvector column was most of
+ * the storage cost, and trigram-over-a-whole-row-blob is expensive to
+ * build/maintain for a query pattern ("find this SSN/name/phone") that's
+ * actually exact/prefix matching on specific fields, not free-text search.
+ * Nullable — a file whose headers don't match any recognized alias just
+ * leaves these null for its rows; that data is still viewable via `data`,
+ * just not reachable through the fast structured search path (documented
+ * limitation, not a bug).
  */
 export const csvRecord = pgTable('csv_record', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -82,9 +90,29 @@ export const csvRecord = pgTable('csv_record', {
   folderId: uuid('folder_id').notNull().references(() => csvSourceFolder.id, { onDelete: 'cascade' }),
   rowNumber: integer('row_number').notNull(),
   data: jsonb('data').$type<Record<string, string | null>>().notNull(),
-  searchText: text('search_text').notNull(),
+  ssn: text('ssn'),
+  firstName: text('first_name'),
+  lastName: text('last_name'),
+  dob: text('dob'),
+  phone: text('phone'),
+  zip: text('zip'),
+  city: text('city'),
+  state: text('state'),
+  address: text('address'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [
   index('csv_record_file_idx').on(t.fileId),
   index('csv_record_folder_idx').on(t.folderId),
+  // B-tree, not GIN -- these back exact/prefix lookups (the actual query
+  // pattern here), which B-tree does natively and far more cheaply than
+  // GIN at this row count. Only `ssn` additionally gets a trigram index
+  // (hand-written migration) for substring/suffix matching (e.g. "last 4
+  // digits") -- affordable there specifically because it's a single small
+  // structured column, not a whole-row blob.
+  index('csv_record_ssn_idx').on(t.ssn),
+  index('csv_record_last_name_idx').on(t.lastName),
+  index('csv_record_first_name_idx').on(t.firstName),
+  index('csv_record_phone_idx').on(t.phone),
+  index('csv_record_zip_idx').on(t.zip),
+  index('csv_record_dob_idx').on(t.dob),
 ])

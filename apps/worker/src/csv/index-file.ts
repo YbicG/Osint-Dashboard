@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm'
 import type { Database } from '@osint/db'
 import { pgClient } from '@osint/db'
 import { csvSourceFile, csvRecord } from '@osint/db/schema'
-import { detectSensitiveColumns } from '@osint/core'
+import { detectSensitiveColumns, detectLookupFieldMapping, normalizeLookupValue, LOOKUP_FIELDS, type LookupField } from '@osint/core'
 import { detectDelimiter } from './detect-delimiter'
 
 /** Reads just the first line of a file to sniff its delimiter, without pulling the whole file into memory. */
@@ -47,10 +47,23 @@ const YIELD_EVERY_ROWS = 2_000
  * when it contains a comma/quote/newline), with internal quotes doubled.
  * Always-quoting rather than only-when-needed means an empty string reads
  * back as an empty string ('""'), not as SQL NULL (COPY's csv format treats
- * a bare, unquoted empty field as NULL) -- search_text is NOT NULL.
+ * a bare, unquoted empty field as NULL). Used for the NOT NULL columns
+ * (file_id, folder_id, row_number, data).
  */
 function csvField(value: string): string {
   return `"${value.replace(/"/g, '""')}"`
+}
+
+/**
+ * Same as csvField, but for the nullable lookup columns: a `null` value
+ * becomes a bare, unquoted empty field, which COPY's csv format reads back
+ * as SQL NULL rather than an empty string -- matters here specifically
+ * because "no value extracted" (NULL, excluded from search) and "extracted
+ * an empty string" (would still match empty-string equality) are different
+ * things.
+ */
+function csvNullableField(value: string | null): string {
+  return value === null ? '' : csvField(value)
 }
 
 /**
@@ -62,6 +75,11 @@ function csvField(value: string): string {
  * server-side data-conversion failures within a chunk without aborting it.
  * Rows that fail to parse as CSV in the first place are skipped
  * client-side, before ever reaching COPY, exactly as before.
+ *
+ * Alongside `data` (the full row, verbatim), each row's structured lookup
+ * columns (ssn, first_name, last_name, ...) are extracted via
+ * packages/core/src/pii/lookup-fields.ts's header-alias mapping, computed
+ * once from the first row's headers and reused for the rest of the file.
  *
  * Trade-offs versus the previous batched-INSERT version, both accepted
  * deliberately for this scale -- see docs/RUNBOOK.md for the full writeup:
@@ -84,6 +102,7 @@ export async function indexCsvFile(db: Database, fileId: string): Promise<void> 
 
   let columns: string[] = []
   let sensitiveColumns: string[] = []
+  let lookupMapping: Partial<Record<LookupField, string>> = {}
   let rowNumber = 0
   let indexedCount = 0
   let errorCount = 0
@@ -96,7 +115,8 @@ export async function indexCsvFile(db: Database, fileId: string): Promise<void> 
   let chunkError: Error | null = null
 
   async function openChunk() {
-    const w = await pgClient`copy csv_record (file_id, folder_id, row_number, data, search_text) from stdin with (format csv, on_error ignore)`.writable()
+    const w =
+      await pgClient`copy csv_record (file_id, folder_id, row_number, data, ssn, first_name, last_name, dob, phone, zip, city, state, address) from stdin with (format csv, on_error ignore)`.writable()
     chunkError = null
     w.on('error', (err: Error) => {
       chunkError = err
@@ -143,17 +163,18 @@ export async function indexCsvFile(db: Database, fileId: string): Promise<void> 
         if (columns.length === 0) {
           columns = Object.keys(row)
           sensitiveColumns = detectSensitiveColumns(columns)
+          lookupMapping = detectLookupFieldMapping(columns)
           await db.update(csvSourceFile).set({ columns, sensitiveColumns, delimiter }).where(eq(csvSourceFile.id, fileId))
         }
 
-        const searchText = Object.values(row)
-          .filter((v): v is string => typeof v === 'string' && v.length > 0)
-          .join(' ')
-          .toLowerCase()
+        const lookupValues = LOOKUP_FIELDS.map((field) => {
+          const sourceHeader = lookupMapping[field]
+          const rawValue = sourceHeader ? row[sourceHeader] : null
+          return csvNullableField(normalizeLookupValue(field, rawValue))
+        })
 
         const line =
-          [csvField(fileId), csvField(file.folderId), csvField(String(rowNumber)), csvField(JSON.stringify(row)), csvField(searchText)].join(',') +
-          '\n'
+          [csvField(fileId), csvField(file.folderId), csvField(String(rowNumber)), csvField(JSON.stringify(row)), ...lookupValues].join(',') + '\n'
 
         await writeLine(line)
         chunkRows++

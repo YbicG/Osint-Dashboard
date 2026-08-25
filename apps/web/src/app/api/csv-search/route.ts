@@ -27,14 +27,25 @@ interface SearchRow {
 }
 
 /**
- * Two-tier search over indexed CSV rows (see packages/db/migrations/0005_csv_search_indexes.sql):
- * full-text (tsvector/GIN, ranked) for word-shaped queries, falling back to
- * trigram substring matching (GIN, gin_trgm_ops) for all-digit queries
- * (partial SSNs/phone/zip fragments) or when full-text finds nothing.
- * `search_vector`/`search_text` aren't Drizzle schema columns (the former is
- * a hand-written generated column), so this runs as raw SQL rather than the
- * query builder. Never returns raw `data` — only a masked preview
- * projection; the full (still-masked) record is a separate, audited fetch.
+ * Structured search over indexed CSV rows against the typed lookup columns
+ * added by packages/db/migrations/0008_csv_record_lookup_columns.sql (see
+ * packages/db/src/schema/csv-search.ts's doc comment for why this replaced
+ * an earlier generic full-text/trigram design). None of ssn/first_name/
+ * etc. are Drizzle schema columns exposed on a query-builder `where`
+ * helper here, so this runs as raw SQL, same as before.
+ *
+ * Query shape is intentionally simple, matched to what this data actually
+ * needs (exact/prefix lookups), not general free-text search:
+ *   - a digits-heavy query (>=3 digits) is tried against ssn (substring,
+ *     via the trigram index -- catches "last 4 of an SSN"), phone
+ *     (exact or prefix), and zip (exact)
+ *   - otherwise it's tried against last_name/first_name (prefix), city/
+ *     state (exact), and address (prefix)
+ * Both tiers can't both fire (see isDigitsHeavy below) -- deliberately
+ * scoped this way rather than trying to guess "SSN vs name" from a mixed
+ * query; combined name+SSN search can be revisited if analysts need it.
+ * Never returns raw `data` -- only a masked preview projection; the full
+ * (still-masked) record is a separate, audited fetch.
  */
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser()
@@ -61,24 +72,26 @@ export async function GET(req: NextRequest) {
     INNER JOIN csv_source_folder fo ON fo.id = r.folder_id AND fo.enabled = true
   `
 
-  const isAllDigits = /^\d+$/.test(q)
-  let rows: SearchRow[] = []
+  const digits = q.replace(/\D/g, '')
+  const isDigitsHeavy = digits.length >= 3 && digits.length >= q.trim().length - 1 // tolerate one separator char, e.g. a stray dash
 
-  if (!isAllDigits) {
+  let rows: SearchRow[]
+
+  if (isDigitsHeavy) {
     rows = await db.execute<SearchRow>(sql`
       SELECT ${selectColumns} ${fromClause}
-      WHERE r.search_vector @@ websearch_to_tsquery('simple', ${q}) ${folderFilter}
-      ORDER BY ts_rank(r.search_vector, websearch_to_tsquery('simple', ${q})) DESC
+      WHERE (r.ssn ILIKE ${'%' + digits + '%'} OR r.phone = ${digits} OR r.phone LIKE ${digits + '%'} OR r.zip = ${digits})
+        ${folderFilter}
       LIMIT ${limit}
     `)
-  }
-
-  if (rows.length === 0) {
+  } else {
     const lowered = q.toLowerCase()
     rows = await db.execute<SearchRow>(sql`
       SELECT ${selectColumns} ${fromClause}
-      WHERE r.search_text ILIKE ${'%' + lowered + '%'} ${folderFilter}
-      ORDER BY similarity(r.search_text, ${lowered}) DESC
+      WHERE (
+        r.last_name LIKE ${lowered + '%'} OR r.first_name LIKE ${lowered + '%'}
+        OR r.city = ${lowered} OR r.state = ${lowered} OR r.address LIKE ${lowered + '%'}
+      ) ${folderFilter}
       LIMIT ${limit}
     `)
   }

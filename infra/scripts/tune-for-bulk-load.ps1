@@ -1,17 +1,19 @@
 <#
 .SYNOPSIS
   One-shot Postgres tuning for a large CSV bulk load (see docs/RUNBOOK.md
-  "Bulk-loading very large CSV files"). Drops the csv_record search indexes,
-  disables autovacuum on it, relaxes durability, and bumps memory settings
-  -- then restarts the postgres container so shared_buffers/effective_cache_size
+  "Bulk-loading very large CSV files"). Drops the csv_record search indexes
+  (7 total as of the typed-lookup-column redesign -- 6 B-tree + 1 trigram,
+  see packages/db/migrations/0008_csv_record_lookup_columns.sql), disables
+  autovacuum on it, relaxes durability, and bumps memory settings -- then
+  restarts the postgres container so shared_buffers/effective_cache_size
   take effect. Assumes you're fine with the container restarting (this
   script exists specifically for the "add the CSV source folder AFTER
   running this" sequence in the runbook -- run it before anything is
   writing to csv_record, not mid-load).
 
   Run the matching -Revert pass once the load has finished, THEN rebuild
-  the two indexes (see the runbook -- not done here, since you may still
-  be loading a second file).
+  the dropped indexes (see the runbook -- not done here, since you may
+  still be loading a second file).
 
 .PARAMETER ComposeFile
   Path to infra/docker-compose.yml. Defaults to the file next to this
@@ -52,7 +54,7 @@ if ($Revert) {
     "ALTER SYSTEM SET synchronous_commit = on;",
     "SELECT pg_reload_conf();"
   )
-  Write-Host "Done. shared_buffers/effective_cache_size were left as-is (fine to keep). Rebuild the two csv_record indexes next -- see docs/RUNBOOK.md." -ForegroundColor Green
+  Write-Host "Done. shared_buffers/effective_cache_size were left as-is (fine to keep). Rebuild the csv_record indexes next -- see docs/RUNBOOK.md." -ForegroundColor Green
   exit 0
 }
 
@@ -62,8 +64,13 @@ if (-not (Test-Path $ComposeFile)) {
 
 Write-Host "Dropping csv_record search indexes..." -ForegroundColor Cyan
 Invoke-Psql @(
-  "DROP INDEX IF EXISTS csv_record_search_vector_idx;",
-  "DROP INDEX IF EXISTS csv_record_search_text_trgm_idx;"
+  "DROP INDEX IF EXISTS csv_record_ssn_idx;",
+  "DROP INDEX IF EXISTS csv_record_last_name_idx;",
+  "DROP INDEX IF EXISTS csv_record_first_name_idx;",
+  "DROP INDEX IF EXISTS csv_record_phone_idx;",
+  "DROP INDEX IF EXISTS csv_record_zip_idx;",
+  "DROP INDEX IF EXISTS csv_record_dob_idx;",
+  "DROP INDEX IF EXISTS csv_record_ssn_trgm_idx;"
 )
 
 Write-Host "Disabling autovacuum on csv_record and relaxing durability/checkpoint settings..." -ForegroundColor Cyan
@@ -96,4 +103,4 @@ for ($i = 0; $i -lt 30; $i++) {
 if (-not $healthy) { Write-Warning "Container didn't report healthy within 60s -- check 'docker compose ps' before proceeding." }
 
 Write-Host "Tuning applied. Add your CSV source folder(s) now -- indexing starts as soon as the worker sees them." -ForegroundColor Green
-Write-Host "When the load is fully done: run this script with -Revert, then rebuild the two dropped indexes (see docs/RUNBOOK.md)." -ForegroundColor Green
+Write-Host "When the load is fully done: run this script with -Revert, then rebuild the dropped indexes (see docs/RUNBOOK.md)." -ForegroundColor Green

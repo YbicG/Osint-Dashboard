@@ -26,8 +26,8 @@ const SENSITIVE_HEADER_PATTERNS: RegExp[] = [
   /alien.?number|uscis/,
 ]
 
-/** Lowercases and collapses any run of non-alphanumeric characters to a single `_`, so "SSN", "Social_Security_Number", and "social-security-number" all normalize the same way before matching. */
-function normalizeHeader(header: string): string {
+/** Lowercases and collapses any run of non-alphanumeric characters to a single `_`, so "SSN", "Social_Security_Number", and "social-security-number" all normalize the same way before matching. Exported for packages/core/src/pii/lookup-fields.ts, which needs the same normalization for its own header-alias matching. */
+export function normalizeHeader(header: string): string {
   return header.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_')
 }
 
