@@ -225,18 +225,40 @@ mid-load):
 
 Then add the CSV source folder(s) — that's what actually starts indexing.
 
-Once the load is fully done, revert the durability/vacuum settings and
-rebuild the indexes:
+Once the load is fully done, revert the durability/vacuum settings, then
+rebuild the seven indexes:
 
 ```powershell
 ./infra/scripts/tune-for-bulk-load.ps1 -Revert
+./infra/scripts/tune-for-bulk-load.ps1 -RebuildIndexes
 ```
+
+`-RebuildIndexes` builds the seven indexes `-Parallelism` at a time
+(default 3, in separate `psql` sessions via PowerShell background jobs)
+instead of one after another — CREATE INDEX on one column doesn't block
+CREATE INDEX on another, so this uses CPU/IO headroom a strictly
+sequential build leaves idle. It also raises `maintenance_work_mem` to
+`-RebuildMaintenanceWorkMem` (default 8GB, up from the 4GB used during the
+load itself) beforehand — nothing else is competing for memory once the
+load is done, and this is a session-level setting so it only affects the
+new index-build connections. Peak extra memory is roughly `Parallelism *
+RebuildMaintenanceWorkMem` (24GB at the defaults); keep that comfortably
+under free RAM alongside `shared_buffers` (16GB by default). Tune both if
+you want more/less parallelism:
+
+```powershell
+./infra/scripts/tune-for-bulk-load.ps1 -RebuildIndexes -Parallelism 4 -RebuildMaintenanceWorkMem 6GB
+```
+
+If you're not on Windows/PowerShell, the sequential-by-hand equivalent:
 
 ```bash
 docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "CREATE INDEX csv_record_ssn_idx ON csv_record USING btree (ssn); CREATE INDEX csv_record_last_name_idx ON csv_record USING btree (last_name); CREATE INDEX csv_record_first_name_idx ON csv_record USING btree (first_name); CREATE INDEX csv_record_phone_idx ON csv_record USING btree (phone); CREATE INDEX csv_record_zip_idx ON csv_record USING btree (zip); CREATE INDEX csv_record_dob_idx ON csv_record USING btree (dob); CREATE INDEX csv_record_ssn_trgm_idx ON csv_record USING gin (ssn gin_trgm_ops); ANALYZE csv_record;"
 ```
 (non-concurrently is fine — and faster — if nothing else needs to query
-the table meanwhile; use `CREATE INDEX CONCURRENTLY` instead if it does)
+the table meanwhile; use `CREATE INDEX CONCURRENTLY` instead if it does,
+or run a few of the statements above in separate terminal tabs at once
+for the same parallel-build benefit the PowerShell script gives you)
 
 The script defaults `shared_buffers=16GB`/`effective_cache_size=48GB` —
 sized off a 64GB host, not a universal default. Pass different values by
