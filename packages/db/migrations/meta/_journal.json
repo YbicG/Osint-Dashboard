@@ -50,6 +50,13 @@
       "when": 1787675652830,
       "tag": "0006_concerned_diamondback",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787677183339,
+      "tag": "0007_claim_value_fingerprint_not_null",
+      "breakpoints": true
     }
   ]
 }
