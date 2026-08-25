@@ -6,7 +6,10 @@ docket number, or a face photo) and get a sourced dossier — every field
 traces back to a source, a timestamp, and archived evidence.
 
 See [`docs/PLAN.md`](./docs/PLAN.md) for the full architecture and phased
-roadmap. This README covers running what's built so far.
+roadmap, and [`docs/RUNBOOK.md`](./docs/RUNBOOK.md) for setup,
+troubleshooting (including a real Docker Desktop/WSL2 failure mode hit
+during development), and day-to-day commands. This README covers running
+what's built so far.
 
 ## Status
 
