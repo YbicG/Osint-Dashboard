@@ -10,6 +10,8 @@ export const SourceCategory = z.enum([
   'vital_genealogy',
   'consumer_api',
   'licensed_vendor',
+  /** Synthetic sources with no external endpoint — e.g. the vision sidecar's face-embedding pipeline. */
+  'internal',
 ])
 export type SourceCategory = z.infer<typeof SourceCategory>
 

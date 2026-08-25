@@ -131,6 +131,36 @@ case-level consent check has already passed.
 created. To reset, delete the row from `app_user` (or change
 `SEED_ADMIN_EMAIL` to a fresh address) and re-run `pnpm db:seed`.
 
+## Schema migrations
+
+- **Adding a `NOT NULL` column with no default** — `pnpm db:generate` will
+  happily emit `ALTER TABLE ... ADD COLUMN ... NOT NULL`, which fails
+  outright against a table that already has rows (there's nothing to
+  populate the new column with). It works today because this is a
+  pre-launch schema with no production data yet. Once real rows exist, do
+  the same three-step rollout `entity.match_key` used: (a) migration adds
+  the column nullable, no default; (b) a `tsx` backfill script computes and
+  writes the value for every existing row *in application code* (never in
+  raw SQL) so the backfill logic can't drift from what the app itself would
+  compute; (c) a hand-written migration (below) adds the `NOT NULL`
+  constraint once every row has a value.
+- **A migration needing something drizzle-kit can't express** (a partial
+  index, a `NOT NULL` added after a backfill, a `CHECK` constraint) —
+  `pnpm --filter @osint/db exec drizzle-kit generate --custom --name
+  <description>` emits an empty numbered `.sql` file in `migrations/` for
+  you to hand-write. It still gets tracked in `_journal.json` and applied
+  by `pnpm db:migrate` like any generated migration.
+- **Adding an index to a table that already has significant rows in a live
+  environment** — a plain `CREATE INDEX` takes a lock that blocks writes for
+  the duration of the build. Hand-edit the generated migration (or use a
+  `--custom` one) to say `CREATE INDEX CONCURRENTLY` instead, and be aware
+  drizzle's own migrator wraps each migration file in a transaction by
+  default — `CREATE INDEX CONCURRENTLY` cannot run inside one, so a
+  concurrent-index migration needs `-- drizzle:no-transaction` or a
+  hand-rolled `psql` invocation outside `pnpm db:migrate`, whichever
+  drizzle's currently-pinned version supports; check its changelog before
+  relying on either.
+
 ## Background workflow / agent orchestration notes
 
 (Relevant only if you're using Claude Code's `Workflow` tool to keep
