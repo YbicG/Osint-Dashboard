@@ -99,6 +99,27 @@ export const Predicate = z.enum([
   'image_face_embedding',
   'document_text',
   'reverse_image_match',
+
+  // digital footprint, wave 2
+  'email_deliverability',
+  'email_reputation',
+  'dns_record',
+  'subdomain',
+  'ip_reputation',
+  'archived_snapshot',
+
+  // crypto
+  'crypto_balance',
+  'crypto_transaction',
+
+  // legal / jurisdictional
+  'traffic_citation',
+  'parcel_record',
+  'jurisdiction_fips',
+  'voter_registration',
+
+  // coverage / meta
+  'collection_coverage',
 ])
 export type Predicate = z.infer<typeof Predicate>
 
@@ -140,4 +161,14 @@ export const PREDICATE_CATEGORY: Record<Predicate, string> = {
   device_fingerprint: 'digital', geolocation: 'digital',
 
   image_exif: 'media', image_face_embedding: 'media', document_text: 'media', reverse_image_match: 'media',
+
+  email_deliverability: 'digital', email_reputation: 'digital', dns_record: 'digital',
+  subdomain: 'digital', ip_reputation: 'digital', archived_snapshot: 'digital',
+
+  crypto_balance: 'financial', crypto_transaction: 'financial',
+
+  traffic_citation: 'criminal_legal', parcel_record: 'property_assets',
+  jurisdiction_fips: 'addresses', voter_registration: 'vital_records',
+
+  collection_coverage: 'meta',
 }

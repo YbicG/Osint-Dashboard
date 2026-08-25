@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { SearchInputType } from './search'
 import { SourceCategory, SourceCostType } from './source'
+import { Predicate } from './predicate'
 
 export const JurisdictionScope = z.enum(['national', 'state', 'county', 'municipal'])
 export type JurisdictionScope = z.infer<typeof JurisdictionScope>
@@ -25,13 +26,15 @@ export const ConnectorMeta = z.object({
   jurisdictionScope: JurisdictionScope,
   /** Which search input types this connector can consume. */
   accepts: z.array(SearchInputType).min(1),
-  /** Which predicates this connector can, at least in principle, emit. Informational for the UI. */
-  emits: z.array(z.string()).min(1),
+  /** Which predicates this connector can, at least in principle, emit. Validated against the Predicate enum so a typo can't silently file claims under a nonexistent dossier tab. */
+  emits: z.array(Predicate).min(1),
   rateLimitPerMinute: z.number().int().positive(),
   robotsPolicy: z.enum(['honor', 'override']),
   tosNote: z.string().nullable(),
   requiresApiKey: z.string().nullable(), // env var name, or null if no key needed
   enabledByDefault: z.boolean(),
+  /** Shown in the dossier's Sources tab when this connector's coverage is structurally partial (e.g. plate lookups being state-limited, or a DPPA-gated field). Null when coverage needs no caveat. */
+  coverageNote: z.string().nullable().optional(),
 })
 export type ConnectorMeta = z.infer<typeof ConnectorMeta>
 

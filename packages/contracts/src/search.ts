@@ -29,11 +29,23 @@ export const PersonNameInput = z.object({
   dateOfBirth: z.string().optional(), // ISO date, partial precision allowed (YYYY or YYYY-MM-DD)
   stateHint: z.string().length(2).optional(), // USPS state code, narrows jurisdiction fan-out
   cityHint: z.string().optional(),
+  /**
+   * Corroboration only — NEVER a search key. SSN geography lives in the
+   * *first* three digits, so last-4 alone can't drive a lookup; this exists
+   * so the entity-resolution scorer can use it as a strong-but-not-alone
+   * signal when two candidate records both carry one. Must never be echoed
+   * into search_request.inputPayload in plaintext where a history/export
+   * view could render it — see apps/web's history label logic.
+   */
+  ssnLast4: z.string().regex(/^\d{4}$/).optional(),
 })
 
 export const AddressInput = z.object({
   type: z.literal('address'),
   raw: z.string().min(1),
+  /** Narrows jurisdiction fan-out (county portals, state registries) — set by the caller or by a prior jurisdiction_fips claim on re-scoped pivot searches. */
+  stateHint: z.string().length(2).optional(),
+  countyHint: z.string().optional(),
 })
 
 export const SimpleValueInput = z.object({
@@ -55,6 +67,19 @@ export const SearchInput = z.discriminatedUnion('type', [
   ImageFaceInput,
 ])
 export type SearchInput = z.infer<typeof SearchInput>
+
+/**
+ * The types the universal search bar actually offers as dropdown entries.
+ * Deliberately excludes `ssn_last4` (never a search key — see PersonNameInput's
+ * doc comment) and `image_face` (a distinct Face Match workflow with its own
+ * consent gate, not a peer of the other 11 — see apps/web's face-match surface).
+ * The search bar and the connector-coverage test both import this so they
+ * cannot silently diverge on what "searchable" means.
+ */
+export const SEARCHABLE_INPUT_TYPES: Exclude<SearchInputType, 'ssn_last4' | 'image_face'>[] = [
+  'person_name', 'phone_e164', 'email', 'username', 'address',
+  'license_plate', 'vin', 'domain', 'ip_address', 'crypto_wallet', 'docket_number',
+]
 
 export const SearchRequest = z.object({
   id: z.string().uuid(),
