@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import { randomBytes, scrypt as scryptCb } from 'node:crypto'
 import { promisify } from 'node:util'
-import { org, appUser, source } from './schema/index.js'
+import { org, appUser } from './schema/index.js'
 import * as schema from './schema/index.js'
 
 const scrypt = promisify(scryptCb)
@@ -59,55 +59,13 @@ async function main() {
     console.log(`Admin user already exists: ${existingAdmin.email}`)
   }
 
-  // Kept as a hand-maintained mirror of packages/connectors/src/registry/index.ts
-  // rather than importing CONNECTOR_REGISTRY directly: @osint/connectors depends
-  // on @osint/core, which depends on @osint/db (audit hash-chain, merge helpers)
-  // — importing connectors from here would create a circular package
-  // dependency. Adding a new connector means adding one line here too; this
-  // list only seeds the source-health dashboard's initial rows (getOrCreateSource
-  // in apps/worker also upserts one automatically on first real run either way),
-  // so drift here is cosmetic, not a functional gap.
-  const CONNECTOR_SOURCES: { connectorId: string; name: string; category: string; costType: string; jurisdiction?: string }[] = [
-    { connectorId: 'sanctions.ofac_sdn', name: 'OFAC Specially Designated Nationals List', category: 'sanctions_watchlists', costType: 'free' },
-    { connectorId: 'federal.fbi_wanted', name: 'FBI Wanted', category: 'federal', costType: 'free' },
-    { connectorId: 'federal.sec_edgar_fulltext', name: 'SEC EDGAR Full-Text Search', category: 'federal', costType: 'free' },
-    { connectorId: 'federal.courtlistener', name: 'CourtListener (RECAP/PACER + Case Law)', category: 'courts_corrections', costType: 'free' },
-    { connectorId: 'digital.username_enumeration', name: 'Username Enumeration (Sherlock/Maigret-style)', category: 'digital', costType: 'free' },
-    { connectorId: 'digital.rdap', name: 'RDAP Domain Registration Lookup', category: 'digital', costType: 'free' },
-    { connectorId: 'digital.certificate_transparency', name: 'Certificate Transparency (crt.sh)', category: 'digital', costType: 'free' },
-    { connectorId: 'digital.ip_geolocation', name: 'IP Geolocation & Proxy Detection', category: 'digital', costType: 'free' },
-    { connectorId: 'consumer_api.twilio_lookup', name: 'Twilio Lookup (line type, carrier, caller name)', category: 'consumer_api', costType: 'paid_api' },
-
-    { connectorId: 'federal.nhtsa_vin', name: 'NHTSA vPIC VIN Decoder', category: 'federal', costType: 'free' },
-    { connectorId: 'federal.usaspending', name: 'USAspending.gov Federal Contracts & Grants', category: 'federal', costType: 'free' },
-    { connectorId: 'federal.propublica_nonprofit', name: 'ProPublica Nonprofit Explorer (IRS Form 990)', category: 'federal', costType: 'free' },
-    { connectorId: 'federal.npi_registry', name: 'NPPES NPI Registry (Healthcare Providers)', category: 'business_professional', costType: 'free' },
-    { connectorId: 'federal.hhs_oig_exclusions', name: 'HHS-OIG List of Excluded Individuals/Entities (LEIE)', category: 'sanctions_watchlists', costType: 'free' },
-    { connectorId: 'vital.ssdi', name: 'WikiTree Deceased-Person Search (free SSDI/DMF substitute)', category: 'vital_genealogy', costType: 'free' },
-    { connectorId: 'federal.faa_airmen', name: 'FAA Airmen Certification Database', category: 'business_professional', costType: 'free' },
-    { connectorId: 'federal.fcc_uls', name: 'FCC Universal Licensing System', category: 'business_professional', costType: 'free' },
-    { connectorId: 'business.opencorporates', name: 'OpenCorporates Company Search', category: 'business_professional', costType: 'freemium' },
-    { connectorId: 'digital.shodan', name: 'Shodan Host Lookup', category: 'consumer_api', costType: 'paid_api' },
-    { connectorId: 'sanctions.un_consolidated', name: 'UN Security Council Consolidated Sanctions List', category: 'sanctions_watchlists', costType: 'free' },
-    { connectorId: 'sanctions.uk_hmt', name: 'UK Sanctions List (OFSI successor)', category: 'sanctions_watchlists', costType: 'free' },
-  ]
-
-  const existingSources = await db.select({ connectorId: source.connectorId }).from(source)
-  const existingIds = new Set(existingSources.map((s) => s.connectorId))
-
-  for (const s of CONNECTOR_SOURCES) {
-    if (existingIds.has(s.connectorId)) continue
-    await db.insert(source).values({
-      connectorId: s.connectorId,
-      name: s.name,
-      category: s.category as never,
-      costType: s.costType as never,
-      jurisdiction: s.jurisdiction ?? null,
-      robotsPolicy: 'honor',
-      enabled: true,
-    })
-    console.log(`Registered source: ${s.name}`)
-  }
+  // The connector source registry itself is no longer seeded here — it's
+  // owned by apps/worker/src/sources/sync.ts's syncSourceRegistry(), which
+  // runs on every worker startup and as a standalone script
+  // (`pnpm --filter @osint/worker sync-sources`), reading directly from
+  // CONNECTOR_REGISTRY so there is exactly one place connector metadata
+  // lives. This used to be a hand-maintained mirror list here that could
+  // (and did) drift from the real registry — see docs/RUNBOOK.md.
 
   await sql.end()
   console.log('Seed complete.')
