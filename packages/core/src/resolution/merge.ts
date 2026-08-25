@@ -1,7 +1,32 @@
-import { eq, or } from 'drizzle-orm'
+import { and, eq, or, sql } from 'drizzle-orm'
 import type { Database } from '@osint/db'
-import { entity, identityCluster, mergeDecision } from '@osint/db/schema'
+import { entity, identityCluster, mergeDecision, edge } from '@osint/db/schema'
 import { appendAuditEntry } from '../audit/hash-chain'
+
+/**
+ * Materializes (or refreshes) a `same_as` edge between two entities. Runs
+ * on every merge — previously merges only set `entity.clusterId`, so the
+ * link graph rendered a merged identity as two unconnected nodes even
+ * though the dossier already treated them as one. Idempotent via
+ * `edge_triple_uidx` (type, sourceEntityId, targetEntityId): re-merging an
+ * already-merged pair (e.g. a search re-run) refreshes `lastObservedAt`
+ * instead of erroring or duplicating.
+ */
+async function upsertSameAsEdge(db: Database, aId: string, bId: string, score: number | null) {
+  const confidence = score ?? 1
+  const now = new Date()
+  await db.insert(edge).values({
+    type: 'same_as',
+    sourceEntityId: aId,
+    targetEntityId: bId,
+    confidence,
+    firstObservedAt: now,
+    lastObservedAt: now,
+  }).onConflictDoUpdate({
+    target: [edge.type, edge.sourceEntityId, edge.targetEntityId],
+    set: { confidence: sql`greatest(${edge.confidence}, ${confidence})`, lastObservedAt: now },
+  })
+}
 
 export interface ApplyMergeInput {
   entityAId: string
@@ -35,6 +60,7 @@ export async function applyMerge(db: Database, input: ApplyMergeInput) {
   }
 
   await db.update(entity).set({ clusterId, updatedAt: new Date() }).where(eq(entity.id, input.entityBId))
+  await upsertSameAsEdge(db, input.entityAId, input.entityBId, input.score)
 
   await db.insert(mergeDecision).values({
     entityAId: input.entityAId,
@@ -75,6 +101,14 @@ export async function applySplit(db: Database, input: ApplySplitInput) {
   }).returning()
 
   await db.update(entity).set({ clusterId: newCluster!.id, updatedAt: new Date() }).where(eq(entity.id, input.entityId))
+
+  // A human just declared this entity does not belong in its former
+  // cluster, so any `same_as` edge asserting it's the same identity as
+  // another entity no longer holds — leaving those edges in place would
+  // have the graph continue showing a link a reviewer explicitly rejected.
+  await db.delete(edge).where(
+    and(eq(edge.type, 'same_as'), or(eq(edge.sourceEntityId, input.entityId), eq(edge.targetEntityId, input.entityId))),
+  )
 
   await db.insert(mergeDecision).values({
     entityAId: input.entityId,

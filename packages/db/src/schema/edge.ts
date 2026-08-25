@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, real, index, primaryKey } from 'drizzle-orm/pg-core'
+import { pgTable, uuid, text, timestamp, real, index, primaryKey, uniqueIndex } from 'drizzle-orm/pg-core'
 import { edgeTypeEnum } from './enums'
 import { entity } from './entity'
 import { claim } from './claim'
@@ -16,6 +16,11 @@ export const edge = pgTable('edge', {
   index('edge_source_idx').on(t.sourceEntityId),
   index('edge_target_idx').on(t.targetEntityId),
   index('edge_type_idx').on(t.type),
+  // Lets materializeEdge upsert in one statement (`ON CONFLICT (type,
+  // source_entity_id, target_entity_id) DO UPDATE`) instead of select-then-
+  // insert-or-update, and makes "the same relationship observed twice"
+  // structurally a conflict instead of a possible duplicate row.
+  uniqueIndex('edge_triple_uidx').on(t.type, t.sourceEntityId, t.targetEntityId),
 ])
 
 /** Join table: which claims justify a given materialized edge (see contracts/edge.ts doc comment). */

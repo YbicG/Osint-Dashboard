@@ -1,0 +1,134 @@
+[
+  {
+    "id": "same-01-exact-name-dob-phone",
+    "label": "same",
+    "note": "Baseline: exact full name + exact DOB + one shared phone.",
+    "features": { "nameA": "John Smith", "nameB": "John Smith", "dobA": "1985-04-12", "dobB": "1985-04-12", "phonesA": ["+15125550100"], "phonesB": ["+15125550100"] }
+  },
+  {
+    "id": "same-02-exact-name-dob-email",
+    "label": "same",
+    "note": "Exact name + exact DOB + shared email.",
+    "features": { "nameA": "Maria Gonzalez", "nameB": "Maria Gonzalez", "dobA": "1990-11-02", "dobB": "1990-11-02", "emailsA": ["maria.g@example.com"], "emailsB": ["maria.g@example.com"] }
+  },
+  {
+    "id": "same-03-exact-name-dob-phone-email",
+    "label": "same",
+    "note": "Strong corroboration: exact name/DOB plus both phone and email overlap.",
+    "features": { "nameA": "David Chen", "nameB": "David Chen", "dobA": "1978-06-30", "dobB": "1978-06-30", "phonesA": ["+12125550111"], "phonesB": ["+12125550111"], "emailsA": ["dchen@example.com"], "emailsB": ["dchen@example.com"] }
+  },
+  {
+    "id": "same-04-exact-name-dob-phone-address",
+    "label": "same",
+    "note": "Exact name/DOB, shared phone and shared current address.",
+    "features": { "nameA": "Angela Brooks", "nameB": "Angela Brooks", "dobA": "1982-01-15", "dobB": "1982-01-15", "phonesA": ["+13125550112"], "phonesB": ["+13125550112"], "addressesA": ["456 Oak Ave, Chicago, IL"], "addressesB": ["456 Oak Ave, Chicago, IL"] }
+  },
+  {
+    "id": "same-05-exact-name-year-only-phone-email-address",
+    "label": "same",
+    "note": "Only DOB year corroborated (partial-precision DOB from a records source), but three other independent signals shared.",
+    "features": { "nameA": "Michael Foster", "nameB": "Michael Foster", "dobA": "1975", "dobB": "1975-09-01", "phonesA": ["+14045550113"], "phonesB": ["+14045550113"], "emailsA": ["mfoster@example.com"], "emailsB": ["mfoster@example.com"], "addressesA": ["9 Peachtree Rd, Atlanta, GA"], "addressesB": ["9 Peachtree Rd, Atlanta, GA"] }
+  },
+  {
+    "id": "same-06-nickname-dob-phone-email",
+    "label": "same",
+    "note": "Common nickname/full-name pair (Bob/Robert) plus exact DOB and two shared contacts.",
+    "features": { "nameA": "Bob Johnson", "nameB": "Robert Johnson", "dobA": "1988-03-22", "dobB": "1988-03-22", "phonesA": ["+15055550114"], "phonesB": ["+15055550114"], "emailsA": ["bjohnson@example.com"], "emailsB": ["bjohnson@example.com"] }
+  },
+  {
+    "id": "same-07-transliteration-dob-phone",
+    "label": "same",
+    "note": "Same person recorded with and without diacritics (transliteration variance) — exact DOB and shared phone should carry it once names normalize the same.",
+    "features": { "nameA": "Jose Garcia", "nameB": "José García", "dobA": "1991-07-04", "dobB": "1991-07-04", "phonesA": ["+15205550115"], "phonesB": ["+15205550115"] }
+  },
+  {
+    "id": "same-08-married-name-change-dob-phone-email",
+    "label": "same",
+    "note": "Married name change: surname differs entirely, but exact DOB plus phone and email corroborate it's the same person despite zero name overlap.",
+    "features": { "nameA": "Sarah Miller", "nameB": "Sarah Whitfield", "dobA": "1993-02-18", "dobB": "1993-02-18", "phonesA": ["+16175550116"], "phonesB": ["+16175550116"], "emailsA": ["sarahm@example.com"], "emailsB": ["sarahm@example.com"] }
+  },
+  {
+    "id": "same-09-exact-name-dob-address-phone",
+    "label": "same",
+    "note": "Exact name/DOB plus shared address and shared phone.",
+    "features": { "nameA": "Kevin Walsh", "nameB": "Kevin Walsh", "dobA": "1980-05-09", "dobB": "1980-05-09", "addressesA": ["12 Birch Ln, Denver, CO"], "addressesB": ["12 Birch Ln, Denver, CO"], "phonesA": ["+17205550119"], "phonesB": ["+17205550119"] }
+  },
+  {
+    "id": "same-10-exact-name-phone-email-no-dob",
+    "label": "same",
+    "note": "No DOB available on either side; exact name plus two independent contact overlaps — needs_review territory.",
+    "features": { "nameA": "Priya Nair", "nameB": "Priya Nair", "phonesA": ["+19195550117"], "phonesB": ["+19195550117"], "emailsA": ["pnair@example.com"], "emailsB": ["pnair@example.com"] }
+  },
+  {
+    "id": "same-11-nickname-dob-phone-only",
+    "label": "same",
+    "note": "Nickname match plus exact DOB and one shared phone — moderate corroboration, review territory.",
+    "features": { "nameA": "Liz Carter", "nameB": "Elizabeth Carter", "dobA": "1996-12-01", "dobB": "1996-12-01", "phonesA": ["+12065550118"], "phonesB": ["+12065550118"] }
+  },
+  {
+    "id": "same-12-exact-name-year-only-relative",
+    "label": "same",
+    "note": "Weakest same-person fixture in the set: exact name, DOB year only, one shared relative name — deliberately thin to test the low end of the review band.",
+    "features": { "nameA": "Thomas Reyes", "nameB": "Thomas Reyes", "dobA": "1970", "dobB": "1970-08-08", "relativeNamesA": ["Ana Reyes"], "relativeNamesB": ["Ana Reyes"] }
+  },
+  {
+    "id": "diff-01-father-son-same-name-address-conflicting-dob",
+    "label": "different",
+    "note": "Classic Jr/Sr collision: identical recorded name and shared family address, but full-precision DOBs disagree by years — the DOB conflict penalty must keep this well clear of auto_merge.",
+    "features": { "nameA": "James Wilson", "nameB": "James Wilson", "dobA": "1958-03-11", "dobB": "1988-03-11", "addressesA": ["77 Maple St, Portland, OR"], "addressesB": ["77 Maple St, Portland, OR"] }
+  },
+  {
+    "id": "diff-02-twins-shared-dob-address-different-names",
+    "label": "different",
+    "note": "Twins: literally share a DOB and a childhood address, but distinct, non-nickname first names — must not push into auto_merge on DOB+address alone.",
+    "features": { "nameA": "Aiden Carter", "nameB": "Mason Carter", "dobA": "2001-05-20", "dobB": "2001-05-20", "addressesA": ["300 Elm Dr, Raleigh, NC"], "addressesB": ["300 Elm Dr, Raleigh, NC"] }
+  },
+  {
+    "id": "diff-03-common-name-common-city-no-other-signal",
+    "label": "different",
+    "note": "Common name collision with no corroborating identifier at all (same city mentioned informally, not a matching street address) — name alone must never be sufficient for auto_merge.",
+    "features": { "nameA": "John Smith", "nameB": "John Smith" }
+  },
+  {
+    "id": "diff-04-nickname-collision-surname",
+    "label": "different",
+    "note": "\"Dick\" as a nickname for Richard collides with \"Dick\" as a surname — different last names, so no name signal should fire at all.",
+    "features": { "nameA": "Dick Johnson", "nameB": "Richard Dick" }
+  },
+  {
+    "id": "diff-05-coincidental-name-similarity-different-people",
+    "label": "different",
+    "note": "Shared surname, dissimilar given names, no other signal — must not accumulate any fuzzy-name score that pushes toward review or merge.",
+    "features": { "nameA": "Chen Wei", "nameB": "Chen Lei" }
+  },
+  {
+    "id": "diff-06-shared-address-unrelated-names",
+    "label": "different",
+    "note": "Two unrelated household members (e.g. roommates) sharing an address with completely unrelated names and no DOB — address overlap alone must stay well under the review threshold.",
+    "features": { "nameA": "Laura Kim", "nameB": "Daniel Ortiz", "addressesA": ["88 Willow Ct, Seattle, WA"], "addressesB": ["88 Willow Ct, Seattle, WA"] }
+  },
+  {
+    "id": "diff-07-shared-household-phone-and-address",
+    "label": "different",
+    "note": "Family members sharing both a landline and a home address, unrelated names, conflicting full DOBs — realistic false-positive bait that should land at most in needs_review.",
+    "features": { "nameA": "Grace Nolan", "nameB": "Peter Nolan", "dobA": "1965-09-09", "dobB": "1992-02-02", "phonesA": ["+13035550120"], "phonesB": ["+13035550120"], "addressesA": ["14 Cedar Way, Boise, ID"], "addressesB": ["14 Cedar Way, Boise, ID"] }
+  },
+  {
+    "id": "diff-08-shared-dob-year-common-surname",
+    "label": "different",
+    "note": "Common surname (Garcia) plus same birth year, dissimilar given names — weak coincidental overlap that must reject or at most graze the bottom of review.",
+    "features": { "nameA": "Luis Garcia", "nameB": "Hector Garcia", "dobA": "1983", "dobB": "1983" }
+  },
+  {
+    "id": "diff-09-single-weak-signal-shared-relative-only",
+    "label": "different",
+    "note": "Two different people who happen to share a listed relative name (e.g. both married into the same family), no name/DOB/contact overlap at all.",
+    "features": { "nameA": "Nadia Farouk", "nameB": "Yusuf Haddad", "relativeNamesA": ["Samir Haddad"], "relativeNamesB": ["Samir Haddad"] }
+  },
+  {
+    "id": "diff-10-boundary-fuzzy-name-only",
+    "label": "different",
+    "note": "Same last name, first names similar enough to trigger the fuzzy-match floor, but genuinely different people with zero other corroboration — the single weakest signal type must never reach auto_merge on its own.",
+    "features": { "nameA": "Kristin Powell", "nameB": "Kirsten Powell" }
+  }
+]

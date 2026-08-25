@@ -64,3 +64,25 @@ export const resolutionCandidate = pgTable('resolution_candidate', {
   uniqueIndex('resolution_candidate_pair_idx').on(t.entityAId, t.entityBId),
 ])
 
+/**
+ * Precomputed blocking keys for candidate generation in
+ * apps/worker/src/ingest/post-collection-resolve.ts — one row per (entity,
+ * key) pair, written from packages/core's `personBlockingKeys()` at the end
+ * of every resolution pass for the entity just processed. Candidate
+ * generation becomes an index seek (`WHERE key = ANY(:myKeys)`) instead of
+ * loading every `person` entity in the database and blocking in JS *after*
+ * loading, which inverted the entire point of blocking. `keyKind` is
+ * carried alongside `key` purely for debuggability (which blocking
+ * strategy produced this row) — it is never itself queried.
+ */
+export const entityBlockingKey = pgTable('entity_blocking_key', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  entityId: uuid('entity_id').notNull().references(() => entity.id, { onDelete: 'cascade' }),
+  key: text('key').notNull(),
+  keyKind: text('key_kind').notNull(),
+}, (t) => [
+  index('entity_blocking_key_key_idx').on(t.key),
+  index('entity_blocking_key_entity_idx').on(t.entityId),
+  uniqueIndex('entity_blocking_key_entity_key_idx').on(t.entityId, t.key),
+])
+
