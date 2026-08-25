@@ -1,6 +1,7 @@
 import { createReadStream } from 'node:fs'
 import { createInterface } from 'node:readline'
 import type { Writable } from 'node:stream'
+import { setImmediate as yieldToEventLoop } from 'node:timers/promises'
 import { parse } from 'csv-parse'
 import { eq } from 'drizzle-orm'
 import type { Database } from '@osint/db'
@@ -28,6 +29,18 @@ async function readFirstLine(filePath: string): Promise<string> {
 // against the data volume. See docs/RUNBOOK.md "Bulk-loading very large CSV
 // files" for the reasoning and the trade-offs below.
 const COPY_CHUNK_ROWS = 500_000
+
+// A fast local COPY write is usually accepted into the stream's buffer
+// synchronously (writable.write() returns true), so `await writeLine(...)`
+// resolves via an already-settled microtask rather than a real I/O wait --
+// unlike the old batched-INSERT version, whose per-batch round trip to
+// Postgres naturally yielded to Node's event loop. Without an explicit
+// yield, a single large file's loop can run long enough to starve BullMQ's
+// own (Redis-driven) job dispatch in this same process, so a second queued
+// file never gets its processor invoked even with concurrency > 1 —
+// observed directly: one file indexing while a second sat at `discovered`
+// indefinitely. setImmediate forces a real event-loop turn periodically.
+const YIELD_EVERY_ROWS = 2_000
 
 /**
  * CSV-quotes a field per COPY's FORMAT csv rules: ALWAYS quoted (not just
@@ -151,6 +164,8 @@ export async function indexCsvFile(db: Database, fileId: string): Promise<void> 
           await db.update(csvSourceFile).set({ rowCount: indexedCount, errorRowCount: errorCount }).where(eq(csvSourceFile.id, fileId))
           await openChunk()
         }
+
+        if (rowNumber % YIELD_EVERY_ROWS === 0) await yieldToEventLoop()
       } catch {
         errorCount++
       }
