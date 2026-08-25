@@ -81,12 +81,14 @@ export class BrowserPool {
       page,
       release: async (outcome) => {
         const proxy = this.activeProxyByContext.get(context)
-        if (proxy) outcome === 'success' ? this.proxyPool.reportSuccess(proxy) : this.proxyPool.reportFailure(proxy)
+        if (proxy) {
+          if (outcome === 'success') this.proxyPool.reportSuccess(proxy)
+          else this.proxyPool.reportFailure(proxy)
+        }
         const cookie = this.activeCookieByContext.get(context)
         if (cookie) {
-          outcome === 'success'
-            ? this.cookieJar.reportSuccess(cookie.platform, cookie.id)
-            : this.cookieJar.reportFailure(cookie.platform, cookie.id)
+          if (outcome === 'success') this.cookieJar.reportSuccess(cookie.platform, cookie.id)
+          else this.cookieJar.reportFailure(cookie.platform, cookie.id)
         }
         await context.close()
       },
