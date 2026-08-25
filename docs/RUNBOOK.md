@@ -161,6 +161,102 @@ created. To reset, delete the row from `app_user` (or change
   drizzle's currently-pinned version supports; check its changelog before
   relying on either.
 
+## Bulk-loading very large CSV files (100M+ rows)
+
+The CSV Search feature (`packages/db/src/schema/csv-search.ts`,
+`apps/worker/src/csv/`) was originally sized for "hundreds of thousands to
+low millions of rows" on one local Postgres instance. Past that, three
+things dominate and are each addressed below: GIN index maintenance,
+Postgres's stock (tiny) default memory settings, and per-row/per-batch
+INSERT overhead.
+
+### 1. Drop the search indexes before loading, rebuild after
+
+`csv_record_search_vector_idx` and `csv_record_search_text_trgm_idx`
+(`packages/db/migrations/0005_csv_search_indexes.sql`) are both GIN
+indexes, and GIN maintenance on every single insert — the trigram one
+especially — is usually the single biggest cost at this scale. Building
+fresh on an already-loaded table is far cheaper than maintaining it
+incrementally across hundreds of millions of writes.
+
+```bash
+docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "DROP INDEX IF EXISTS csv_record_search_vector_idx; DROP INDEX IF EXISTS csv_record_search_text_trgm_idx;"
+```
+
+After the load finishes, rebuild them (non-concurrently is fine — and
+faster — if nothing else needs to query the table meanwhile; use `CREATE
+INDEX CONCURRENTLY` instead if it does):
+
+```bash
+docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "CREATE INDEX csv_record_search_vector_idx ON csv_record USING gin (search_vector); CREATE INDEX csv_record_search_text_trgm_idx ON csv_record USING gin (search_text gin_trgm_ops); ANALYZE csv_record;"
+```
+
+### 2. Postgres tuning for the duration of the load
+
+The stock image ships with tiny defaults (`shared_buffers=128MB`,
+`maintenance_work_mem=64MB`) that will bottleneck a large load regardless
+of anything else. Reloadable settings (no restart):
+
+```bash
+docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "ALTER TABLE csv_record SET (autovacuum_enabled = false); ALTER SYSTEM SET synchronous_commit = off; ALTER SYSTEM SET maintenance_work_mem = '4GB'; ALTER SYSTEM SET work_mem = '256MB'; ALTER SYSTEM SET max_wal_size = '16GB'; ALTER SYSTEM SET checkpoint_timeout = '30min'; SELECT pg_reload_conf();"
+```
+
+`shared_buffers`/`effective_cache_size` need a restart (worth doing once,
+up front, rather than mid-load) — size these off the *host's* available
+RAM, not a fixed number, and check Docker Desktop's own VM memory cap
+(Settings → Resources) isn't set lower than what you're about to ask
+Postgres for:
+
+```bash
+docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "ALTER SYSTEM SET shared_buffers = '16GB'; ALTER SYSTEM SET effective_cache_size = '48GB';"
+docker compose -f infra/docker-compose.yml restart postgres
+```
+
+Once the load is done, revert the durability/vacuum settings (`shared_buffers`/`effective_cache_size` are fine to leave):
+
+```bash
+docker exec -it osint-dashboard-postgres-1 psql -U osint -d osint -c "ALTER TABLE csv_record SET (autovacuum_enabled = true); ALTER SYSTEM SET synchronous_commit = on; SELECT pg_reload_conf();"
+```
+
+### 3. The worker's own load path: batched INSERT vs. COPY
+
+`apps/worker/src/csv/index-file.ts` streams each file through `csv-parse`
+and writes to `csv_record` via Postgres `COPY FROM STDIN`
+(`pgClient\`copy ...\`.writable()`, the raw postgres.js client exported as
+`pgClient` from `packages/db/src/client.ts` — Drizzle's own `sql` helper
+only builds fragments for `db.execute()`, it doesn't expose COPY). This
+replaced an earlier batched-`INSERT` version once file sizes grew into the
+hundreds of millions of rows, where per-statement planning/parameter-binding
+overhead (even batched at thousands of rows/statement) became the
+bottleneck. Deliberate trade-offs, both accepted for this scale:
+
+- **Rows are written in chunks of `COPY_CHUNK_ROWS` (500,000), not one COPY
+  for the whole file.** COPY FROM STDIN is one implicit transaction — a
+  hard failure (dropped connection, etc.) rolls back whatever hasn't
+  committed in the *current* chunk, not the whole file. Chunking bounds
+  that blast radius; it doesn't eliminate it. A failure still loses up to
+  ~500K rows of progress, versus ~10K under the old batched-INSERT version.
+- **`rowCount`/`errorRowCount` are approximate**, not a confirmed
+  post-write count from Postgres — they reflect what the worker attempted
+  to write. `ON_ERROR ignore` (Postgres 17+; confirmed via
+  `infra/docker-compose.yml`'s `pgvector/pgvector:pg17` image) lets
+  Postgres silently skip a row that fails server-side type conversion
+  without aborting the chunk, and that skip isn't reflected back into the
+  counts. Getting an exact count would mean a `COUNT(*)` per chunk, which
+  itself gets slower as the table grows — working against the reason for
+  this change in the first place. Rows that fail to parse as CSV at all are
+  still caught and counted client-side, before ever reaching COPY, same as
+  before.
+- **This has not been run against a live multi-hundred-million-row load in
+  this environment** (Docker Compose isn't available in every dev sandbox
+  used on this project). Trial it against one real file before pointing it
+  at the largest one — the fallback if something's wrong is the same as
+  ever: check `csv_source_file.status`/`error_message` for that file.
+
+If you need to change the chunk size, it's the one constant at the top of
+`index-file.ts` — larger reduces per-invocation overhead further but
+raises the worst-case rows-lost-on-failure; smaller does the reverse.
+
 ## Background workflow / agent orchestration notes
 
 (Relevant only if you're using Claude Code's `Workflow` tool to keep

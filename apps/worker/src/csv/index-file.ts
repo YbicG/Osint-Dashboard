@@ -1,13 +1,13 @@
 import { createReadStream } from 'node:fs'
 import { createInterface } from 'node:readline'
+import type { Writable } from 'node:stream'
 import { parse } from 'csv-parse'
 import { eq } from 'drizzle-orm'
 import type { Database } from '@osint/db'
+import { pgClient } from '@osint/db'
 import { csvSourceFile, csvRecord } from '@osint/db/schema'
 import { detectSensitiveColumns } from '@osint/core'
 import { detectDelimiter } from './detect-delimiter'
-
-const BATCH_SIZE = 500
 
 /** Reads just the first line of a file to sniff its delimiter, without pulling the whole file into memory. */
 async function readFirstLine(filePath: string): Promise<string> {
@@ -20,13 +20,44 @@ async function readFirstLine(filePath: string): Promise<string> {
   }
 }
 
+// Rows per COPY invocation. COPY FROM STDIN is one implicit transaction: a
+// hard failure (e.g. a dropped connection) aborts whatever hasn't committed
+// in the CURRENT chunk, not the whole file. Chunking bounds that blast
+// radius to ~this many rows instead of up to the full file, while staying
+// large enough that COPY's fixed per-invocation overhead stays negligible
+// against the data volume. See docs/RUNBOOK.md "Bulk-loading very large CSV
+// files" for the reasoning and the trade-offs below.
+const COPY_CHUNK_ROWS = 500_000
+
 /**
- * Streams one CSV file into `csv_record`, batching inserts so memory stays
- * bounded regardless of file size (Node's stream backpressure throttles
- * reading — the file is never buffered whole). Malformed individual rows
- * are skipped and counted rather than aborting the job; a hard stream error
- * keeps whatever was already flushed and marks the file `error` rather than
- * rolling back prior progress.
+ * CSV-quotes a field per COPY's FORMAT csv rules: ALWAYS quoted (not just
+ * when it contains a comma/quote/newline), with internal quotes doubled.
+ * Always-quoting rather than only-when-needed means an empty string reads
+ * back as an empty string ('""'), not as SQL NULL (COPY's csv format treats
+ * a bare, unquoted empty field as NULL) -- search_text is NOT NULL.
+ */
+function csvField(value: string): string {
+  return `"${value.replace(/"/g, '""')}"`
+}
+
+/**
+ * Streams one CSV file into `csv_record` via Postgres COPY rather than
+ * batched INSERT -- at multi-hundred-million-row scale, per-statement
+ * planning/parameter-binding overhead (even batched) is the dominant cost;
+ * COPY sidesteps it. `ON_ERROR ignore` (Postgres 17+, confirmed in use --
+ * see infra/docker-compose.yml's `pgvector/pgvector:pg17` image) tolerates
+ * server-side data-conversion failures within a chunk without aborting it.
+ * Rows that fail to parse as CSV in the first place are skipped
+ * client-side, before ever reaching COPY, exactly as before.
+ *
+ * Trade-offs versus the previous batched-INSERT version, both accepted
+ * deliberately for this scale -- see docs/RUNBOOK.md for the full writeup:
+ *   - rowCount/errorRowCount become approximate: they reflect what this
+ *     process attempted to write, not a confirmed post-COPY count from
+ *     Postgres (an extra COUNT(*) per chunk would itself get slower as the
+ *     table grows, working against the very thing this change is for).
+ *   - a hard COPY-chunk failure can lose up to COPY_CHUNK_ROWS rows of
+ *     progress, not just the current small batch.
  */
 export async function indexCsvFile(db: Database, fileId: string): Promise<void> {
   const [file] = await db.select().from(csvSourceFile).where(eq(csvSourceFile.id, fileId))
@@ -43,14 +74,41 @@ export async function indexCsvFile(db: Database, fileId: string): Promise<void> 
   let rowNumber = 0
   let indexedCount = 0
   let errorCount = 0
-  let batch: Array<typeof csvRecord.$inferInsert> = []
+  let chunkRows = 0
 
-  async function flush() {
-    if (batch.length === 0) return
-    await db.insert(csvRecord).values(batch)
-    indexedCount += batch.length
-    await db.update(csvSourceFile).set({ rowCount: indexedCount, errorRowCount: errorCount }).where(eq(csvSourceFile.id, fileId))
-    batch = []
+  // Chunk state -- one persistent error listener per chunk (not per row) so
+  // a server-side abort surfaces without EventEmitter churn at billions of
+  // writes/sec scale.
+  let writable: Writable | null = null
+  let chunkError: Error | null = null
+
+  async function openChunk() {
+    const w = await pgClient`copy csv_record (file_id, folder_id, row_number, data, search_text) from stdin with (format csv, on_error ignore)`.writable()
+    chunkError = null
+    w.on('error', (err: Error) => {
+      chunkError = err
+    })
+    writable = w
+    chunkRows = 0
+  }
+
+  /** Writes one CSV line, respecting Writable backpressure via drain. */
+  function writeLine(line: string): Promise<void> {
+    if (chunkError) return Promise.reject(chunkError)
+    const w = writable!
+    if (w.write(line)) return Promise.resolve()
+    return new Promise((resolve, reject) => {
+      w.once('drain', () => (chunkError ? reject(chunkError) : resolve()))
+    })
+  }
+
+  function closeChunk(): Promise<void> {
+    const w = writable
+    writable = null
+    if (!w) return Promise.resolve()
+    return new Promise((resolve, reject) => {
+      w.end(() => (chunkError ? reject(chunkError) : resolve()))
+    })
   }
 
   const parser = createReadStream(file.absolutePath, { encoding: 'utf8' }).pipe(
@@ -65,6 +123,7 @@ export async function indexCsvFile(db: Database, fileId: string): Promise<void> 
   )
 
   try {
+    await openChunk()
     for await (const row of parser as AsyncIterable<Record<string, string | null>>) {
       rowNumber++
       try {
@@ -79,19 +138,31 @@ export async function indexCsvFile(db: Database, fileId: string): Promise<void> 
           .join(' ')
           .toLowerCase()
 
-        batch.push({ fileId, folderId: file.folderId, rowNumber, data: row, searchText })
-        if (batch.length >= BATCH_SIZE) await flush()
+        const line =
+          [csvField(fileId), csvField(file.folderId), csvField(String(rowNumber)), csvField(JSON.stringify(row)), csvField(searchText)].join(',') +
+          '\n'
+
+        await writeLine(line)
+        chunkRows++
+        indexedCount++
+
+        if (chunkRows >= COPY_CHUNK_ROWS) {
+          await closeChunk()
+          await db.update(csvSourceFile).set({ rowCount: indexedCount, errorRowCount: errorCount }).where(eq(csvSourceFile.id, fileId))
+          await openChunk()
+        }
       } catch {
         errorCount++
       }
     }
-    await flush()
+    await closeChunk()
     await db.update(csvSourceFile).set({ status: 'indexed', indexedAt: new Date(), rowCount: indexedCount, errorRowCount: errorCount }).where(eq(csvSourceFile.id, fileId))
   } catch (err) {
-    // Stream itself failed mid-file (e.g. binary garbage) — keep whatever
-    // was already flushed rather than rolling it back; a partial index beats
-    // none for search purposes, and the error status tells the admin to look.
-    await flush().catch(() => {})
+    // Stream itself failed mid-file (e.g. binary garbage, or the current
+    // COPY chunk aborted) -- keep whatever prior chunks already committed
+    // rather than rolling them back; a partial index beats none for search
+    // purposes, and the error status tells the admin to look.
+    await closeChunk().catch(() => {})
     const message = err instanceof Error ? err.message : String(err)
     await db.update(csvSourceFile).set({ status: 'error', errorMessage: message, rowCount: indexedCount, errorRowCount: errorCount }).where(eq(csvSourceFile.id, fileId))
   }

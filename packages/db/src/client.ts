@@ -12,3 +12,10 @@ const queryClient = postgres(connectionString, { max: 10 })
 export const db = drizzle(queryClient, { schema })
 export type Database = typeof db
 export { schema }
+
+// The raw postgres.js client, not wrapped by Drizzle. Needed for
+// COPY FROM STDIN (`pgClient\`copy ...\`.writable()`) -- Drizzle's own
+// `sql` helper builds query fragments for `db.execute()`, it doesn't expose
+// COPY. Used by apps/worker/src/csv/index-file.ts for bulk CSV loads; see
+// docs/RUNBOOK.md's "Bulk-loading very large CSV files" section.
+export const pgClient = queryClient
