@@ -109,6 +109,18 @@ export const csvRecord = pgTable('csv_record', {
   // (hand-written migration) for substring/suffix matching (e.g. "last 4
   // digits") -- affordable there specifically because it's a single small
   // structured column, not a whole-row blob.
+  //
+  // last_name/first_name are declared here as plain btree for drizzle-kit's
+  // sake, but the indexes actually applied to the database use the
+  // text_pattern_ops operator class instead (see
+  // packages/db/migrations/0010_csv_record_name_text_pattern_ops.sql) -- a
+  // plain btree index can only accelerate `LIKE 'prefix%'` when the
+  // column's collation is `C`, which this database is not (the official
+  // Postgres image defaults to en_US.utf8), so without text_pattern_ops
+  // apps/web/src/app/api/csv-search/route.ts's prefix search on these two
+  // columns silently falls back to a full table scan despite the index
+  // existing. Drizzle has no first-class opclass API in this version, so
+  // this is enforced by the hand-written migration, not by `db:generate`.
   index('csv_record_ssn_idx').on(t.ssn),
   index('csv_record_last_name_idx').on(t.lastName),
   index('csv_record_first_name_idx').on(t.firstName),

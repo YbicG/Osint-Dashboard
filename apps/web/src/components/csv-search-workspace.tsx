@@ -29,9 +29,24 @@ function useDebounced<T>(value: T, delayMs: number): T {
   return debounced
 }
 
+// Only meaningful for a non-digits-heavy query -- an SSN/phone/zip-shaped
+// query ignores this and always searches those three fields (unaffected by
+// this selector; see apps/web/src/app/api/csv-search/route.ts's doc
+// comment). 'both' runs first_name and last_name as two independently
+// indexed queries and unions the results, rather than one query that
+// silently falls back to a full table scan -- picking a single field here
+// is purely a speed/precision choice for the analyst, not a workaround.
+const NAME_FIELD_OPTIONS = [
+  { value: 'both', label: 'First + last name' },
+  { value: 'first_name', label: 'First name only' },
+  { value: 'last_name', label: 'Last name only' },
+] as const
+type NameField = (typeof NAME_FIELD_OPTIONS)[number]['value']
+
 export function CsvSearchWorkspace() {
   const [query, setQuery] = useState('')
   const [folderId, setFolderId] = useState('')
+  const [nameField, setNameField] = useState<NameField>('both')
   const [folders, setFolders] = useState<FolderOption[]>([])
   const [results, setResults] = useState<SearchResult[] | null>(null)
   const [loading, setLoading] = useState(false)
@@ -52,7 +67,7 @@ export function CsvSearchWorkspace() {
     }
     setLoading(true)
     setError(null)
-    const params = new URLSearchParams({ q: debouncedQuery })
+    const params = new URLSearchParams({ q: debouncedQuery, field: nameField })
     if (folderId) params.set('folderId', folderId)
     fetch(`/api/csv-search?${params}`)
       .then(async (r) => {
@@ -63,7 +78,7 @@ export function CsvSearchWorkspace() {
       .then((body) => setResults(body.results))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
-  }, [debouncedQuery, folderId])
+  }, [debouncedQuery, folderId, nameField])
 
   return (
     <div>
@@ -73,10 +88,20 @@ export function CsvSearchWorkspace() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search name, address, SSN fragment, or any indexed value (min 3 characters)"
+            placeholder="Search name or SSN/phone/zip fragment (min 3 characters)"
             className="w-full rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] py-2 pl-9 pr-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
           />
         </div>
+        <select
+          value={nameField}
+          onChange={(e) => setNameField(e.target.value as NameField)}
+          title="Only applies to a name search -- an SSN/phone/zip-shaped query always searches those fields"
+          className="rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--accent)] focus:outline-none"
+        >
+          {NAME_FIELD_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
         <select
           value={folderId}
           onChange={(e) => setFolderId(e.target.value)}
