@@ -5,6 +5,7 @@ import { maskRecord } from '@osint/core'
 import { getCurrentUser } from '@/server/auth'
 import { db } from '@/server/db'
 
+const SearchMode = z.enum(['auto', 'name', 'id'])
 const NameField = z.enum(['both', 'first_name', 'last_name'])
 type NameField = z.infer<typeof NameField>
 
@@ -12,8 +13,13 @@ const QuerySchema = z.object({
   q: z.string().trim().min(3, 'Query must be at least 3 characters'),
   folderId: z.string().uuid().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
-  // Only meaningful for the non-digits-heavy branch below -- ignored for an
-  // ssn/phone/zip-shaped query. Defaults to 'both' (first name OR last
+  // 'auto' (the pre-existing behavior, kept as the default for any other
+  // API caller) guesses from digit density -- see isDigitsHeavy below.
+  // The UI always sends 'name' or 'id' explicitly now, because leaving it
+  // to a heuristic is exactly the kind of "what will this actually search"
+  // ambiguity that made the search bar confusing to use.
+  mode: SearchMode.default('auto'),
+  // Only meaningful in 'name' mode. Defaults to 'both' (first name OR last
   // name), which is a UNION of two independently-indexed queries rather
   // than a single `OR` -- see the doc comment on the GET handler for why
   // that distinction matters at this table's size.
@@ -79,12 +85,13 @@ export async function GET(req: NextRequest) {
     q: req.nextUrl.searchParams.get('q') ?? undefined,
     folderId: req.nextUrl.searchParams.get('folderId') ?? undefined,
     limit: req.nextUrl.searchParams.get('limit') ?? undefined,
+    mode: req.nextUrl.searchParams.get('mode') ?? undefined,
     field: req.nextUrl.searchParams.get('field') ?? undefined,
   })
   if (!parsed.success) {
     return NextResponse.json({ error: 'Invalid request', details: parsed.error.flatten() }, { status: 400 })
   }
-  const { q, folderId, limit, field } = parsed.data
+  const { q, folderId, limit, mode, field } = parsed.data
   const folderFilter = folderId ? sql`AND r.folder_id = ${folderId}` : sql``
 
   const selectColumns = sql`
@@ -98,7 +105,8 @@ export async function GET(req: NextRequest) {
   `
 
   const digits = q.replace(/\D/g, '')
-  const isDigitsHeavy = digits.length >= 3 && digits.length >= q.trim().length - 1 // tolerate one separator char, e.g. a stray dash
+  const digitsHeuristic = digits.length >= 3 && digits.length >= q.trim().length - 1 // tolerate one separator char, e.g. a stray dash
+  const isDigitsHeavy = mode === 'auto' ? digitsHeuristic : mode === 'id'
 
   let rows: SearchRow[]
 
